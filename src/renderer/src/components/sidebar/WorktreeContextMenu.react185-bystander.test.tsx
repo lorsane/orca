@@ -26,6 +26,9 @@ const state = {
   setWorktreesPinnedAndReveal: vi.fn(),
   setWorkspaceRowHidden: vi.fn(),
   hiddenWorkspaceIdentities: [],
+  boardExcludedWorkspaceIdentities: [],
+  boardIncludedWorkspaceIdentities: [],
+  setWorkspaceBoardMembership: vi.fn(),
   workspaceStatuses: [
     { id: 'todo', label: 'Todo' },
     { id: 'doing', label: 'Doing' }

@@ -13,6 +13,7 @@ import { SettingsSwitch } from '../settings/SettingsFormControls'
 import type { WorkspaceStatusDefinition } from '../../../../shared/worktree/types'
 import { getWorkspaceStatusVisualMeta } from './workspace-status'
 import WorkspaceStatusAppearancePopover from './WorkspaceStatusAppearancePopover'
+import WorkspaceBoardRemovedCardsRow from './WorkspaceBoardRemovedCardsRow'
 import { translate } from '@/i18n/i18n'
 
 type WorkspaceKanbanSettingsMenuProps = {
@@ -107,6 +108,7 @@ export default function WorkspaceKanbanSettingsMenu({
             />
           </div>
         </div>
+        <WorkspaceBoardRemovedCardsRow />
         <DropdownMenuLabel>
           {translate('auto.components.sidebar.WorkspaceKanbanSettingsMenu.395e541d5d', 'Statuses')}
         </DropdownMenuLabel>

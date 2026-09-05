@@ -19,6 +19,7 @@ import type { WorkspacePortScanResult } from '../../../../../shared/workspace-po
 import type { CustomPet } from '../../../../../shared/pet-types'
 import type { ReleaseChannel } from '../../../../../shared/release-channel'
 import type { WorkspaceActivityWindow } from '../../../../../shared/workspace-activity-window'
+import type { WorkspaceBoardMembership } from '../../../../../shared/workspace-board-membership'
 import type { ChangelogData, UpdateStatus } from '../../../../../shared/update-status-types'
 import type { StatusBarUsageMode } from '../../../../../shared/status-bar-usage-mode'
 import type { PersistedUIWriteBaseline } from '../persisted-ui-write-baseline'
@@ -68,6 +69,13 @@ export type UISlicePreferences = {
   setShowHiddenSidebarRows: (v: boolean) => void
   pinnedSectionGroupByStatus: boolean
   setPinnedSectionGroupByStatus: (v: boolean) => void
+  boardExcludedWorkspaceIdentities: string[]
+  boardIncludedWorkspaceIdentities: string[]
+  setWorkspaceBoardMembership: (
+    workspaceIdentity: string,
+    membership: WorkspaceBoardMembership
+  ) => void
+  resetWorkspaceBoardMembership: () => void
   unhideAllSidebarRows: () => void
   alwaysShowDefaultBranchWorkspace: boolean
   setAlwaysShowDefaultBranchWorkspace: (v: boolean) => void

@@ -14,8 +14,12 @@ import {
 } from './workspace-creator-visibility'
 import { getWorktreeHostIdentity } from '../../../../shared/worktree/host-qualified-identity'
 import { getActiveSidebarWorkspaceId } from '../../../../shared/workspace-scope'
-import { folderWorkspaceToWorktree } from '../../../../shared/folder-workspace-worktree'
+import {
+  folderWorkspaceRowIdentity,
+  folderWorkspaceToWorktree
+} from '../../../../shared/folder-workspace-worktree'
 import { toHiddenRowSet } from '../../../../shared/hidden-sidebar-rows'
+import { isWorkspaceOnBoard } from '../../../../shared/workspace-board-membership'
 import { useSidebarWorktreeFilters } from './worktree-list/listing/use-filters'
 import { useSidebarHostVisibleScope } from './worktree-list/listing/use-host-visible-scope'
 import { EMPTY_PROJECT_GROUPS } from './worktree-list/viewport/viewport-props'
@@ -114,10 +118,27 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
     folderWorkspaces,
     pairedDeviceIdsByEnvironment
   })
-  const folderBoardWorktrees = useMemo(
-    () => visibleFolderWorkspacesForRows.map(folderWorkspaceToWorktree),
-    [visibleFolderWorkspacesForRows]
-  )
+  const boardExcluded = useAppStore((s) => s.boardExcludedWorkspaceIdentities)
+  const boardIncluded = useAppStore((s) => s.boardIncludedWorkspaceIdentities)
+  const boardExcludedSet = useMemo(() => toHiddenRowSet(boardExcluded), [boardExcluded])
+  const boardIncludedSet = useMemo(() => toHiddenRowSet(boardIncluded), [boardIncluded])
+  // Why the full catalog and not the visible slice: an explicitly included row
+  // must reach the board even when a sidebar filter dropped it.
+  const folderBoardWorktrees = useMemo(() => {
+    const visibleIdentities = new Set(
+      visibleFolderWorkspacesForRows.map(folderWorkspaceRowIdentity)
+    )
+    return folderWorkspaces
+      .map(folderWorkspaceToWorktree)
+      .filter((card) =>
+        isWorkspaceOnBoard(
+          getWorktreeHostIdentity(card),
+          visibleIdentities.has(getWorktreeHostIdentity(card)),
+          boardExcludedSet,
+          boardIncludedSet
+        )
+      )
+  }, [boardExcludedSet, boardIncludedSet, folderWorkspaces, visibleFolderWorkspacesForRows])
 
   const visibleWorktreeIds = useMemo(() => {
     // Why: the board has its own status ordering, but visibility must match
@@ -185,14 +206,21 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
     worktreesByRepo
   ])
 
-  return useMemo(
-    () => ({
-      visibleWorktreeIds: new Set([
-        ...visibleWorktreeIds,
-        ...folderBoardWorktrees.map(getWorktreeHostIdentity)
-      ]),
-      folderBoardWorktrees
-    }),
-    [folderBoardWorktrees, visibleWorktreeIds]
-  )
+  return useMemo(() => {
+    const boardIdentities = new Set(folderBoardWorktrees.map(getWorktreeHostIdentity))
+    for (const worktree of allWorktrees) {
+      const identity = getWorktreeHostIdentity(worktree)
+      if (
+        isWorkspaceOnBoard(
+          identity,
+          visibleWorktreeIds.has(identity),
+          boardExcludedSet,
+          boardIncludedSet
+        )
+      ) {
+        boardIdentities.add(identity)
+      }
+    }
+    return { visibleWorktreeIds: boardIdentities, folderBoardWorktrees }
+  }, [allWorktrees, boardExcludedSet, boardIncludedSet, folderBoardWorktrees, visibleWorktreeIds])
 }
