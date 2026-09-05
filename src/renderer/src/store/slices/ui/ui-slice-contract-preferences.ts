@@ -66,6 +66,8 @@ export type UISlicePreferences = {
   setSidebarProjectHidden: (projectId: string, hidden: boolean) => void
   showHiddenSidebarRows: boolean
   setShowHiddenSidebarRows: (v: boolean) => void
+  pinnedSectionGroupByStatus: boolean
+  setPinnedSectionGroupByStatus: (v: boolean) => void
   unhideAllSidebarRows: () => void
   alwaysShowDefaultBranchWorkspace: boolean
   setAlwaysShowDefaultBranchWorkspace: (v: boolean) => void

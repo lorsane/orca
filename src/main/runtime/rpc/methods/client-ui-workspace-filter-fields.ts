@@ -11,6 +11,7 @@ export const ClientUiWorkspaceFilterFields = {
   hiddenWorkspaceIdentities: z.array(z.string()).optional(),
   hiddenSidebarProjectIds: z.array(z.string()).optional(),
   showHiddenSidebarRows: z.boolean().optional(),
+  pinnedSectionGroupByStatus: z.boolean().optional(),
   alwaysShowDefaultBranchWorkspace: z.boolean().optional(),
   filterRepoIds: z.array(z.string()).optional()
 }

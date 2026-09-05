@@ -85,6 +85,18 @@ export const PINNED_GROUP_META = {
   icon: Pin
 } as const
 
+/** Per-status subsection of the Pinned section. Only header keys carry it —
+ *  item rows stay on PINNED_GROUP_KEY so drag and reveal keep one pinned scope. */
+export const PINNED_STATUS_GROUP_PREFIX = 'pinned:'
+
+export function getPinnedStatusGroupKey(status: string): string {
+  return `${PINNED_STATUS_GROUP_PREFIX}${encodeURIComponent(status)}`
+}
+
+export function isPinnedSectionHeaderKey(key: string): boolean {
+  return key === PINNED_GROUP_KEY || key.startsWith(PINNED_STATUS_GROUP_PREFIX)
+}
+
 export const ALL_GROUP_KEY = 'all'
 
 export const ALL_GROUP_META = {

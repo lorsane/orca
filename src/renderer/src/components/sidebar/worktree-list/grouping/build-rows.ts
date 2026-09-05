@@ -70,7 +70,9 @@ export function buildRows(
   folderWorkspaces: readonly FolderWorkspace[] = [],
   hostLabelById?: ReadonlyMap<string, string>,
   defaultHostId: ExecutionHostId = LOCAL_EXECUTION_HOST_ID,
-  pinnedDisplayPolicy: PinnedWorktreeDisplayPolicy = getPinnedWorktreeDisplayPolicy(settings)
+  pinnedDisplayPolicy: PinnedWorktreeDisplayPolicy = getPinnedWorktreeDisplayPolicy(settings),
+  /** Split the Pinned section into one lane per board status. */
+  groupPinnedByStatus = false
 ): Row[] {
   const result: Row[] = []
   const projectIndex = buildProjectGroupingIndex(projectGrouping)
@@ -145,7 +147,9 @@ export function buildRows(
     worktreeMap,
     nestLineage,
     cyclicLineageIds,
-    noticeHostContextLabelByRepoId
+    noticeHostContextLabelByRepoId,
+    workspaceStatuses,
+    groupPinnedByStatus
   )
   if (groupBy === 'none') {
     // Why folder workspaces gate this too: an account with only folder

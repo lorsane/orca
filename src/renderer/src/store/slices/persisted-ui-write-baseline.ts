@@ -30,6 +30,7 @@ export type PersistedUIWriteBaseline = {
   hiddenWorkspaceIdentities: string[]
   hiddenSidebarProjectIds: string[]
   showHiddenSidebarRows: boolean
+  pinnedSectionGroupByStatus: boolean
   alwaysShowDefaultBranchWorkspace: boolean
   showDotfilesByWorktree: Record<string, boolean>
   filterRepoIds: readonly string[]
@@ -63,6 +64,7 @@ const PERSISTED_UI_WRITE_BASELINE_FIELD_SET = {
   hiddenWorkspaceIdentities: true,
   hiddenSidebarProjectIds: true,
   showHiddenSidebarRows: true,
+  pinnedSectionGroupByStatus: true,
   alwaysShowDefaultBranchWorkspace: true,
   showDotfilesByWorktree: true,
   filterRepoIds: true,

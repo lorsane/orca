@@ -4,39 +4,43 @@ import {
 } from './workspace-activity-window'
 import type { PersistedUIState } from './persisted-ui-state-types'
 
-/** Defaults for the sidebar's row-visibility preferences: which rows the user
- *  narrowed away by recency, and which they hid outright. */
-export type SidebarRowVisibilityState = Pick<
+/** Defaults for how sidebar rows are narrowed and grouped: recency, explicit
+ *  hides, and whether the Pinned section splits into board-status lanes. */
+export type SidebarRowPresentationState = Pick<
   PersistedUIState,
   | 'workspaceActivityWindow'
   | 'hiddenWorkspaceIdentities'
   | 'hiddenSidebarProjectIds'
   | 'showHiddenSidebarRows'
+  | 'pinnedSectionGroupByStatus'
 >
 
-export function createDefaultSidebarRowVisibilityState(): Pick<
+export function createDefaultSidebarRowPresentationState(): Pick<
   PersistedUIState,
   | 'workspaceActivityWindow'
   | 'hiddenWorkspaceIdentities'
   | 'hiddenSidebarProjectIds'
   | 'showHiddenSidebarRows'
+  | 'pinnedSectionGroupByStatus'
 > {
   return {
     workspaceActivityWindow: DEFAULT_WORKSPACE_ACTIVITY_WINDOW,
     hiddenWorkspaceIdentities: [],
     hiddenSidebarProjectIds: [],
-    showHiddenSidebarRows: false
+    showHiddenSidebarRows: false,
+    pinnedSectionGroupByStatus: true
   }
 }
 
 /** Reads the same group back off a persisted mirror, degrading unknown values. */
-export function hydrateSidebarRowVisibilityState(
+export function hydrateSidebarRowPresentationState(
   ui: Partial<PersistedUIState>
-): Required<SidebarRowVisibilityState> {
+): Required<SidebarRowPresentationState> {
   return {
     workspaceActivityWindow: normalizeWorkspaceActivityWindow(ui.workspaceActivityWindow),
     hiddenWorkspaceIdentities: [...(ui.hiddenWorkspaceIdentities ?? [])],
     hiddenSidebarProjectIds: [...(ui.hiddenSidebarProjectIds ?? [])],
-    showHiddenSidebarRows: ui.showHiddenSidebarRows === true
+    showHiddenSidebarRows: ui.showHiddenSidebarRows === true,
+    pinnedSectionGroupByStatus: ui.pinnedSectionGroupByStatus !== false
   }
 }
