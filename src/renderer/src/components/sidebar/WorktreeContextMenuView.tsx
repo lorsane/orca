@@ -17,8 +17,6 @@ import {
   BellOff,
   CircleX,
   Pencil,
-  Eye,
-  EyeOff,
   Pin,
   PinOff,
   Trash2,
@@ -34,7 +32,7 @@ import { WorktreeDeveloperMenu } from './WorktreeDeveloperMenu'
 import { WorkspaceSleepMenuItems } from './WorkspaceSleepMenuItems'
 import { isEventTargetInsideCurrentTarget } from './worktree-card-dom-events'
 import { translate } from '@/i18n/i18n'
-import { useWorktreeRowHideAction } from './use-worktree-row-hide-action'
+import { WorktreeRowVisibilityMenuItems } from './WorktreeRowVisibilityMenuItems'
 import { useOptionalShortcutLabel } from '@/hooks/useShortcutLabel'
 import type { WorktreeContextMenuModel } from './use-worktree-context-menu-model'
 import { WorktreeStatusMenuItems } from './WorktreeStatusMenuItems'
@@ -104,7 +102,6 @@ export default function WorktreeContextMenuView({ model }: { model: WorktreeCont
     workspaceStatuses
   } = model
   const deleteShortcut = useOptionalShortcutLabel('workspace.delete')
-  const { isHidden, toggleHidden } = useWorktreeRowHideAction(worktree, effectiveSelectedWorktrees)
   return (
     <div
       ref={scopeRef}
@@ -192,15 +189,11 @@ export default function WorktreeContextMenuView({ model }: { model: WorktreeCont
                   ? translate('auto.components.sidebar.WorktreeContextMenu.697d0f6e1b', 'Unpin')
                   : translate('auto.components.sidebar.WorktreeContextMenu.3baa7d6507', 'Pin')}
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={toggleHidden} disabled={isDeleting}>
-                {isHidden ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
-                {isHidden
-                  ? translate('auto.components.sidebar.WorktreeContextMenu.unhideRow', 'Unhide')
-                  : translate(
-                      'auto.components.sidebar.WorktreeContextMenu.hideRow',
-                      'Hide from sidebar'
-                    )}
-              </DropdownMenuItem>
+              <WorktreeRowVisibilityMenuItems
+                worktree={worktree}
+                contextWorktrees={effectiveSelectedWorktrees}
+                disabled={isDeleting}
+              />
               <DropdownMenuItem onSelect={handleToggleRead} disabled={isDeleting}>
                 {worktree.isUnread ? (
                   <BellOff className="size-3.5" />

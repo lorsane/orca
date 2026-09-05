@@ -146,4 +146,32 @@ describe('useVisibleWorkspaceKanbanWorktreeIds', () => {
     rerender()
     expect(result.current.folderBoardWorktrees).toHaveLength(1)
   })
+
+  it('honours per-row board overrides in both directions', () => {
+    const repo = makeRepo()
+    const shown = makeWorktree('shown', 'On the board')
+    const removed = makeWorktree('removed', 'Taken off the board')
+    useAppStore.setState({
+      worktreesByRepo: { [repo.id]: [shown, removed] },
+      showSleepingWorkspaces: true,
+      boardExcludedWorkspaceIdentities: [getWorktreeHostIdentity(removed)]
+    })
+
+    const { result, rerender } = renderHook(() =>
+      useVisibleWorkspaceKanbanWorktreeIds({
+        allWorktrees: [shown, removed],
+        repoMap: new Map([[repo.id, repo]])
+      })
+    )
+    expect([...result.current.visibleWorktreeIds]).toEqual([getWorktreeHostIdentity(shown)])
+
+    // A sidebar filter that hides everything still cannot beat an explicit include.
+    useAppStore.setState({
+      boardExcludedWorkspaceIdentities: [],
+      boardIncludedWorkspaceIdentities: [getWorktreeHostIdentity(removed)],
+      hiddenSidebarProjectIds: [repo.id]
+    })
+    rerender()
+    expect([...result.current.visibleWorktreeIds]).toEqual([getWorktreeHostIdentity(removed)])
+  })
 })

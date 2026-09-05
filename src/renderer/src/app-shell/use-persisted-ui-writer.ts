@@ -165,6 +165,8 @@ export function usePersistedUIWriter(): void {
       hiddenSidebarProjectIds: s.hiddenSidebarProjectIds,
       showHiddenSidebarRows: s.showHiddenSidebarRows,
       pinnedSectionGroupByStatus: s.pinnedSectionGroupByStatus,
+      boardExcludedWorkspaceIdentities: s.boardExcludedWorkspaceIdentities,
+      boardIncludedWorkspaceIdentities: s.boardIncludedWorkspaceIdentities,
       alwaysShowDefaultBranchWorkspace: s.alwaysShowDefaultBranchWorkspace,
       showDotfilesByWorktree: s.showDotfilesByWorktree,
       filterRepoIds: s.filterRepoIds,

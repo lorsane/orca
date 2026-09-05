@@ -81,6 +81,10 @@ export type PersistedUIState = {
   showHiddenSidebarRows?: boolean
   /** Split the Pinned section into one lane per board status. Absent means on. */
   pinnedSectionGroupByStatus?: boolean
+  /** Rows dropped from the workspace board only, by host-qualified identity. */
+  boardExcludedWorkspaceIdentities?: string[]
+  /** Rows forced onto the workspace board even when a sidebar filter hides them. */
+  boardIncludedWorkspaceIdentities?: string[]
   /** Keep each project's main workspace out of the "Hide sleeping" sweep. Absent means on (#8873). */
   alwaysShowDefaultBranchWorkspace?: boolean
   /** Per-worktree Explorer dotfile visibility. Missing entries inherit the default: show. */
