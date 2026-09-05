@@ -20,6 +20,38 @@ once, and the list has to stay short.
 Every behaviour above has an off-switch in the sidebar filter menu, the
 workspace options menu, or the board settings menu.
 
+## Installs alongside an official Orca
+
+| | Official | This fork |
+| --- | --- | --- |
+| App | `Orca.app` | `Orca Multi.app` |
+| Icon | Classic (black) | Blue |
+| Data | `~/Library/Application Support/orca` | `~/Library/Application Support/orca-multi` |
+| Bundle id | `com.stablyai.orca` | *same* |
+
+Separate data directories are what let both run at the same time — Electron's
+single-instance lock lives in userData. They also mean the two installs do not
+share projects, workspaces or settings; seed the fork by copying
+`profiles/` and `orca-profile-index.json` from the official directory.
+
+The bundle id is deliberately **not** forked. TCC grants, the keychain
+"Safe Storage" item, the macOS press-and-hold default and the
+notification-settings deep link are all keyed on it and hardcoded in `src/main`,
+so forking it would mean re-granting every permission and re-authenticating
+every agent account. The cost is that `open -b com.stablyai.orca` is ambiguous
+while both are installed, and both register the `orca://` scheme.
+
+`src/shared/fork-identity.ts` holds the name and data directory for code that
+resolves userData **without** Electron — the bundled CLI and offline hook
+commands, which would otherwise read and write the official install's state.
+`fork-identity.test.ts` fails if it drifts from the packager's values.
+
+Each install's CLI lives inside its own bundle:
+
+```sh
+ln -sf "/Applications/Orca Multi.app/Contents/Resources/bin/orca" /usr/local/bin/orca-multi
+```
+
 ## Auto-update is disabled on purpose
 
 The packaged update feed points at the upstream repository, so an enabled

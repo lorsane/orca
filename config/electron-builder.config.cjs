@@ -63,6 +63,19 @@ const devChannelRepo = isHourlyChannel
       ? 'orca-adhoc'
       : null
 const appId = 'com.stablyai.orca'
+// Fork identity: its own app name and data directory, so this build installs and
+// runs alongside an official Orca instead of replacing it.
+//
+// Why appId is deliberately NOT forked: TCC grants, the keychain "Safe Storage"
+// item, the macOS press-and-hold default, and the notification-settings deep
+// link are all keyed on the bundle id and hardcoded in src/main. Changing it
+// would mean re-granting every permission and re-authenticating every agent
+// account, for no gain — the two installs are already told apart by name, icon
+// and data directory.
+const forkProductName = 'Orca Multi'
+// Electron derives userData from the packaged package.json `name`, so this is
+// what actually keeps the two installs' state (and their singleton locks) apart.
+const forkDataDirName = 'orca-multi'
 const featureWallResources = {
   from: 'resources/onboarding/feature-wall',
   to: 'onboarding/feature-wall'
@@ -149,14 +162,17 @@ const MARKDOWN_FILE_EXTENSIONS = ['md', 'markdown', 'mdx']
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
   appId,
-  productName: 'Orca',
-  protocols: [{ name: 'Orca', schemes: ['orca'] }],
+  productName: forkProductName,
+  protocols: [{ name: forkProductName, schemes: ['orca'] }],
   toolsets: { appimage: '1.0.3' },
-  ...(devChannelBuildVersion
-    ? { extraMetadata: { version: devChannelBuildVersion } }
-    : localBuildVersion
-      ? { extraMetadata: { version: localBuildVersion } }
-      : {}),
+  extraMetadata: {
+    name: forkDataDirName,
+    ...(devChannelBuildVersion
+      ? { version: devChannelBuildVersion }
+      : localBuildVersion
+        ? { version: localBuildVersion }
+        : {})
+  },
   directories: {
     buildResources: 'resources/build'
   },
@@ -545,7 +561,7 @@ module.exports = {
   // silently downgrading to ad-hoc artifacts that look shippable in CI logs.
   forceCodeSigning: isMacRelease,
   dmg: {
-    artifactName: 'orca-macos-${arch}.${ext}'
+    artifactName: 'orca-multi-macos-${arch}.${ext}'
   },
   linux: {
     // Why mimeTypes and not fileAssociations: shared-mime-info already maps *.md/*.markdown to
