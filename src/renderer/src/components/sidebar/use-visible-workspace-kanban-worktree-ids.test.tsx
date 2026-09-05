@@ -6,6 +6,44 @@ import { useAppStore } from '@/store'
 import { getWorktreeHostIdentity } from '../../../../shared/worktree/host-qualified-identity'
 import { makeRepo, makeWorktree } from '../worktree-jump-palette-test-fixtures'
 import { useVisibleWorkspaceKanbanWorktreeIds } from './use-visible-workspace-kanban-worktree-ids'
+import { folderWorkspaceKey } from '../../../../shared/workspace-scope'
+import type { FolderWorkspace } from '../../../../shared/folder-workspace-types'
+import type { ProjectGroup } from '../../../../shared/project-group-types'
+
+function makeProjectGroup(): ProjectGroup {
+  return {
+    id: 'group-1',
+    name: 'monorepo',
+    parentPath: '/tmp/monorepo',
+    parentGroupId: null,
+    createdFrom: 'folder-scan',
+    tabOrder: 0,
+    isCollapsed: false,
+    color: null,
+    createdAt: 0,
+    updatedAt: 0
+  }
+}
+
+function makeFolderWorkspace(overrides: Partial<FolderWorkspace> = {}): FolderWorkspace {
+  return {
+    id: 'fw-1',
+    projectGroupId: 'group-1',
+    name: 'research',
+    folderPath: '/tmp/monorepo/research',
+    linkedTask: null,
+    comment: '',
+    isArchived: false,
+    isUnread: false,
+    isPinned: false,
+    sortOrder: 0,
+    workspaceStatus: 'todo',
+    lastActivityAt: 0,
+    createdAt: 0,
+    updatedAt: 0,
+    ...overrides
+  }
+}
 
 const initialState = useAppStore.getInitialState()
 
@@ -36,6 +74,49 @@ describe('useVisibleWorkspaceKanbanWorktreeIds', () => {
       })
     )
 
-    expect(result.current).toEqual(new Set([getWorktreeHostIdentity(local)]))
+    expect(result.current.visibleWorktreeIds).toEqual(new Set([getWorktreeHostIdentity(local)]))
+  })
+
+  it('puts folder workspaces on the board with their own status', () => {
+    const group = makeProjectGroup()
+    const folderWorkspace = makeFolderWorkspace({ workspaceStatus: 'in-progress' })
+    useAppStore.setState({
+      worktreesByRepo: {},
+      projectGroups: [group],
+      folderWorkspaces: [folderWorkspace],
+      showSleepingWorkspaces: true
+    })
+
+    const { result } = renderHook(() =>
+      useVisibleWorkspaceKanbanWorktreeIds({ allWorktrees: [], repoMap: new Map() })
+    )
+
+    const [card] = result.current.folderBoardWorktrees
+    expect(card?.id).toBe(folderWorkspaceKey(folderWorkspace.id))
+    expect(card?.workspaceStatus).toBe('in-progress')
+    expect(result.current.visibleWorktreeIds.has(getWorktreeHostIdentity(card!))).toBe(true)
+  })
+
+  it('drops folder workspaces the activity window excludes', () => {
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+    useAppStore.setState({
+      worktreesByRepo: {},
+      projectGroups: [makeProjectGroup()],
+      folderWorkspaces: [
+        makeFolderWorkspace({ id: 'fresh', lastActivityAt: startOfToday.getTime() + 60_000 }),
+        makeFolderWorkspace({ id: 'stale', lastActivityAt: startOfToday.getTime() - 60_000 })
+      ],
+      showSleepingWorkspaces: true,
+      workspaceActivityWindow: 'today'
+    })
+
+    const { result } = renderHook(() =>
+      useVisibleWorkspaceKanbanWorktreeIds({ allWorktrees: [], repoMap: new Map() })
+    )
+
+    expect(result.current.folderBoardWorktrees.map((card) => card.id)).toEqual([
+      folderWorkspaceKey('fresh')
+    ])
   })
 })

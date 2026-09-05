@@ -15,6 +15,7 @@ import { useWorkspaceKanbanWorktreeActions } from './use-workspace-kanban-worktr
 import type { Worktree } from '../../../../shared/worktree/types'
 import { useContextualTour } from '@/components/contextual-tours/use-contextual-tour'
 import { getWorktreeHostIdentity } from '../../../../shared/worktree/host-qualified-identity'
+import { getActiveSidebarWorkspaceId } from '../../../../shared/workspace-scope'
 import WorkspaceKanbanDrawerView from './WorkspaceKanbanDrawerView'
 import { useWorkspaceKanbanBoardProjection } from './use-workspace-kanban-board-projection'
 import { useWorkspaceKanbanNativeDrag } from './use-workspace-kanban-native-drag'
@@ -55,7 +56,10 @@ function WorkspaceKanbanDrawerContent({
   const allWorktrees = useAllWorktrees()
   const folderWorkspaces = useAppStore((s) => s.folderWorkspaces)
   const repoMap = useRepoMap()
-  const activeWorktreeId = useAppStore((s) => s.activeWorktreeId)
+  // Why the scoped id: a focused FOLDER workspace must highlight its board card too.
+  const activeWorktreeId = useAppStore((s) =>
+    getActiveSidebarWorkspaceId(s.activeWorkspaceKey, s.activeWorktreeId)
+  )
   const activeWorkspaceExecutionHostId = useAppStore((s) => s.activeWorkspaceExecutionHostId)
   const updateWorktreeMeta = useAppStore((s) => s.updateWorktreeMeta)
   const updateWorktreesMeta = useAppStore((s) => s.updateWorktreesMeta)
