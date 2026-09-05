@@ -99,6 +99,11 @@ describe('sidebarHasActiveFilters', () => {
     expect(sidebarHasActiveFilters(filterState({ hideDetachedHeadWorkspaces: true }))).toBe(true)
   })
 
+  it('counts a narrowed activity window as an active filter', () => {
+    expect(sidebarHasActiveFilters(filterState({ workspaceActivityWindow: 'all' }))).toBe(false)
+    expect(sidebarHasActiveFilters(filterState({ workspaceActivityWindow: 'today' }))).toBe(true)
+  })
+
   it('returns true when workspaces from other devices are hidden', () => {
     expect(sidebarHasActiveFilters(filterState({ hideWorkspacesFromOtherDevices: true }))).toBe(
       true
@@ -154,6 +159,7 @@ describe('computeClearFilterActions', () => {
       resetHideCliCreatedWorkspaces: false,
       resetHideDetachedHeadWorkspaces: false,
       resetHideWorkspacesFromOtherDevices: false,
+      resetWorkspaceActivityWindow: false,
       resetAlwaysShowDefaultBranchWorkspace: false,
       resetVisibleWorkspaceHostIds: false
     })
@@ -171,6 +177,7 @@ describe('computeClearFilterActions', () => {
       resetHideCliCreatedWorkspaces: false,
       resetHideDetachedHeadWorkspaces: false,
       resetHideWorkspacesFromOtherDevices: false,
+      resetWorkspaceActivityWindow: false,
       resetAlwaysShowDefaultBranchWorkspace: false,
       resetVisibleWorkspaceHostIds: false
     })
@@ -187,6 +194,7 @@ describe('computeClearFilterActions', () => {
       resetHideCliCreatedWorkspaces: false,
       resetHideDetachedHeadWorkspaces: false,
       resetHideWorkspacesFromOtherDevices: false,
+      resetWorkspaceActivityWindow: false,
       resetAlwaysShowDefaultBranchWorkspace: false,
       resetVisibleWorkspaceHostIds: false
     })
@@ -201,6 +209,7 @@ describe('computeClearFilterActions', () => {
       resetHideCliCreatedWorkspaces: true,
       resetHideDetachedHeadWorkspaces: false,
       resetHideWorkspacesFromOtherDevices: false,
+      resetWorkspaceActivityWindow: false,
       resetAlwaysShowDefaultBranchWorkspace: false,
       resetVisibleWorkspaceHostIds: false
     })
@@ -215,6 +224,7 @@ describe('computeClearFilterActions', () => {
       resetHideCliCreatedWorkspaces: false,
       resetHideDetachedHeadWorkspaces: true,
       resetHideWorkspacesFromOtherDevices: false,
+      resetWorkspaceActivityWindow: false,
       resetAlwaysShowDefaultBranchWorkspace: false,
       resetVisibleWorkspaceHostIds: false
     })
@@ -242,6 +252,7 @@ describe('computeClearFilterActions', () => {
       resetHideCliCreatedWorkspaces: false,
       resetHideDetachedHeadWorkspaces: false,
       resetHideWorkspacesFromOtherDevices: false,
+      resetWorkspaceActivityWindow: false,
       resetAlwaysShowDefaultBranchWorkspace: false,
       resetVisibleWorkspaceHostIds: true
     })
@@ -258,6 +269,7 @@ describe('computeClearFilterActions', () => {
       resetHideCliCreatedWorkspaces: false,
       resetHideDetachedHeadWorkspaces: false,
       resetHideWorkspacesFromOtherDevices: false,
+      resetWorkspaceActivityWindow: false,
       resetAlwaysShowDefaultBranchWorkspace: true,
       resetVisibleWorkspaceHostIds: false
     })
@@ -271,6 +283,7 @@ describe('computeClearFilterActions', () => {
           filterRepoIds: ['repo1', 'repo2'],
           hideDefaultBranchWorkspace: true,
           hideAutomationGeneratedWorkspaces: true,
+          workspaceActivityWindow: 'today',
           visibleWorkspaceHostIds: ['local']
         })
       )
@@ -282,8 +295,20 @@ describe('computeClearFilterActions', () => {
       resetHideCliCreatedWorkspaces: false,
       resetHideDetachedHeadWorkspaces: false,
       resetHideWorkspacesFromOtherDevices: false,
+      resetWorkspaceActivityWindow: true,
       resetAlwaysShowDefaultBranchWorkspace: false,
       resetVisibleWorkspaceHostIds: true
     })
+  })
+
+  it('flags the activity window for reset only when it narrows the list', () => {
+    expect(
+      computeClearFilterActions(filterState({ workspaceActivityWindow: 'all' }))
+        .resetWorkspaceActivityWindow
+    ).toBe(false)
+    expect(
+      computeClearFilterActions(filterState({ workspaceActivityWindow: 'today-yesterday' }))
+        .resetWorkspaceActivityWindow
+    ).toBe(true)
   })
 })

@@ -25,6 +25,7 @@ import type {
 } from './ui-chrome-types'
 import type { WorkspaceStatusDefinition } from './worktree/types'
 import type { PersistedAutomationHostFilter } from './automation-host-filter'
+import type { WorkspaceActivityWindow } from './workspace-activity-window'
 
 export type PersistedUIState = {
   lastActiveRepoId: string | null
@@ -70,6 +71,8 @@ export type PersistedUIState = {
   hideDetachedHeadWorkspaces?: boolean
   /** Hide workspaces with known provenance from another paired device or the host UI. */
   hideWorkspacesFromOtherDevices?: boolean
+  /** Recency filter for workspace nav; absent means 'all'. Calendar-day bounds, not a rolling window. */
+  workspaceActivityWindow?: WorkspaceActivityWindow
   /** Keep each project's main workspace out of the "Hide sleeping" sweep. Absent means on (#8873). */
   alwaysShowDefaultBranchWorkspace?: boolean
   /** Per-worktree Explorer dotfile visibility. Missing entries inherit the default: show. */

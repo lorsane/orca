@@ -1,4 +1,5 @@
 import type { PersistedUIState } from '../../../../shared/persisted-ui-state-types'
+import type { WorkspaceActivityWindow } from '../../../../shared/workspace-activity-window'
 
 /**
  * Mirror-shaped snapshot of the fields the debounced persisted-UI writer owns.
@@ -25,6 +26,7 @@ export type PersistedUIWriteBaseline = {
   hideCliCreatedWorkspaces: boolean
   hideDetachedHeadWorkspaces: boolean
   hideWorkspacesFromOtherDevices: boolean
+  workspaceActivityWindow: WorkspaceActivityWindow
   alwaysShowDefaultBranchWorkspace: boolean
   showDotfilesByWorktree: Record<string, boolean>
   filterRepoIds: readonly string[]
@@ -54,6 +56,7 @@ const PERSISTED_UI_WRITE_BASELINE_FIELD_SET = {
   hideCliCreatedWorkspaces: true,
   hideDetachedHeadWorkspaces: true,
   hideWorkspacesFromOtherDevices: true,
+  workspaceActivityWindow: true,
   alwaysShowDefaultBranchWorkspace: true,
   showDotfilesByWorktree: true,
   filterRepoIds: true,

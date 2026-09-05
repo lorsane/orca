@@ -1,6 +1,7 @@
 import type { ExecutionHostId, ExecutionHostScope } from '../../../../shared/execution-host'
 import type { Worktree } from '../../../../shared/worktree/types'
 import { getWorktreeGitIdentityDisplay } from '@/lib/worktree-git-identity-display'
+import type { WorkspaceActivityWindow } from '../../../../shared/workspace-activity-window'
 
 /**
  * Predicates for what KIND of workspace a row is.
@@ -57,6 +58,8 @@ export type SidebarFilterState = {
   hideCliCreatedWorkspaces: boolean
   hideDetachedHeadWorkspaces: boolean
   hideWorkspacesFromOtherDevices: boolean
+  /** Recency filter; absent or 'all' admits every row. */
+  workspaceActivityWindow?: WorkspaceActivityWindow
   /** Keeps each project's main workspace out of the "Hide sleeping" sweep; absent means on. */
   alwaysShowDefaultBranchWorkspace?: boolean
   visibleWorkspaceHostIds?: readonly ExecutionHostId[] | null

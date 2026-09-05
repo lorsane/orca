@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useAppStore } from '@/store'
 import { getAgentStatusEpochNow } from '@/lib/agent-status-epoch-clock'
+import { useLocalDayStart } from '@/lib/use-local-day-start'
 import type { Repo } from '../../../../shared/repo-types'
 import type { Worktree } from '../../../../shared/worktree/types'
 import { computeVisibleWorktrees } from './visible-worktrees'
@@ -12,6 +13,7 @@ import {
   getPairedDeviceIdsByEnvironment
 } from './workspace-creator-visibility'
 import { getWorktreeHostIdentity } from '../../../../shared/worktree/host-qualified-identity'
+import { getActiveSidebarWorkspaceId } from '../../../../shared/workspace-scope'
 
 type UseVisibleWorkspaceKanbanWorktreeIdsParams = {
   allWorktrees: readonly Worktree[]
@@ -33,6 +35,11 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
   const hideCliCreatedWorkspaces = useAppStore((s) => s.hideCliCreatedWorkspaces)
   const hideDetachedHeadWorkspaces = useAppStore((s) => s.hideDetachedHeadWorkspaces)
   const hideWorkspacesFromOtherDevices = useAppStore((s) => s.hideWorkspacesFromOtherDevices)
+  const workspaceActivityWindow = useAppStore((s) => s.workspaceActivityWindow)
+  const activeWorktreeId = useAppStore((s) =>
+    getActiveSidebarWorkspaceId(s.activeWorkspaceKey, s.activeWorktreeId)
+  )
+  const dayStartAt = useLocalDayStart()
   const runtimeEnvironments = useAppStore((s) =>
     s.hideWorkspacesFromOtherDevices ? s.runtimeEnvironments : EMPTY_RUNTIME_ENVIRONMENTS
   )
@@ -87,6 +94,9 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
         hideCliCreatedWorkspaces,
         hideDetachedHeadWorkspaces,
         hideWorkspacesFromOtherDevices,
+        workspaceActivityWindow,
+        activityWindowNow: dayStartAt,
+        activeWorktreeId,
         pairedDeviceIdsByEnvironment: hideWorkspacesFromOtherDevices
           ? getPairedDeviceIdsByEnvironment(runtimeEnvironments, runtimeStatusByEnvironmentId)
           : EMPTY_PAIRED_DEVICE_IDS_BY_ENVIRONMENT,
@@ -110,6 +120,9 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
     hideCliCreatedWorkspaces,
     hideDetachedHeadWorkspaces,
     hideWorkspacesFromOtherDevices,
+    workspaceActivityWindow,
+    activeWorktreeId,
+    dayStartAt,
     alwaysShowDefaultBranchWorkspace,
     workspaceHostScope,
     visibleWorkspaceHostIds,

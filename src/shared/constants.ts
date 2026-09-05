@@ -6,6 +6,7 @@ import type { PersistedState } from './persisted-state-types'
 import type { PersistedUIState } from './persisted-ui-state-types'
 import type { AgentActivityDisplayMode } from './ui-chrome-types'
 import type { WorkspaceSessionState } from './workspace-session-state-types'
+import { DEFAULT_WORKSPACE_ACTIVITY_WINDOW } from './workspace-activity-window'
 import { EMPTY_CODEX_RESET_CREDIT_ATTEMPT_LEDGER } from './codex-reset-credit-attempt-ledger'
 import { DEFAULT_STATUS_BAR_ITEMS } from './status-bar-defaults'
 import type { VoiceSettings } from './speech-types'
@@ -267,6 +268,7 @@ export function getDefaultUIState(): PersistedUIState {
     hideCliCreatedWorkspaces: false,
     hideDetachedHeadWorkspaces: false,
     hideWorkspacesFromOtherDevices: false,
+    workspaceActivityWindow: DEFAULT_WORKSPACE_ACTIVITY_WINDOW,
     alwaysShowDefaultBranchWorkspace: true,
     showDotfilesByWorktree: {},
     filterRepoIds: [],

@@ -1,4 +1,11 @@
 import { useMemo } from 'react'
+import { useAppStore } from '@/store'
+import { useLocalDayStart } from '@/lib/use-local-day-start'
+import { isWithinWorkspaceActivityWindow } from '../../../../../../shared/workspace-activity-window'
+import {
+  folderWorkspaceKey,
+  getActiveSidebarWorkspaceId
+} from '../../../../../../shared/workspace-scope'
 import type { FolderWorkspace } from '../../../../../../shared/folder-workspace-types'
 import type { ProjectGroup } from '../../../../../../shared/project-group-types'
 import type { Repo } from '../../../../../../shared/repo-types'
@@ -25,8 +32,16 @@ export function useSidebarHostVisibleScope(args: {
   pairedDeviceIdsByEnvironment: Parameters<typeof filterFolderWorkspacesFromOtherDevices>[1]
 }) {
   const { filterState, defaultHostId, repos, projectGroups, folderWorkspaces } = args
-  const { visibleWorkspaceHostIds, workspaceHostScope, hideWorkspacesFromOtherDevices } =
-    filterState
+  const {
+    visibleWorkspaceHostIds,
+    workspaceHostScope,
+    hideWorkspacesFromOtherDevices,
+    workspaceActivityWindow
+  } = filterState
+  const activeSidebarWorkspaceId = useAppStore((s) =>
+    getActiveSidebarWorkspaceId(s.activeWorkspaceKey, s.activeWorktreeId)
+  )
+  const dayStartAt = useLocalDayStart()
   const visibleHostIdSet = useMemo(
     () => getVisibleSidebarHostIdSet(visibleWorkspaceHostIds, workspaceHostScope),
     [visibleWorkspaceHostIds, workspaceHostScope]
@@ -52,14 +67,28 @@ export function useSidebarHostVisibleScope(args: {
       visibleHostIdSet,
       defaultHostId
     )
-    if (!hideWorkspacesFromOtherDevices) {
-      return hostVisibleWorkspaces
+    const deviceVisibleWorkspaces = hideWorkspacesFromOtherDevices
+      ? filterFolderWorkspacesFromOtherDevices(
+          hostVisibleWorkspaces,
+          args.pairedDeviceIdsByEnvironment
+        )
+      : hostVisibleWorkspaces
+    if (!workspaceActivityWindow || workspaceActivityWindow === 'all') {
+      return deviceVisibleWorkspaces
     }
-    return filterFolderWorkspacesFromOtherDevices(
-      hostVisibleWorkspaces,
-      args.pairedDeviceIdsByEnvironment
+    return deviceVisibleWorkspaces.filter(
+      (workspace) =>
+        folderWorkspaceKey(workspace.id) === activeSidebarWorkspaceId ||
+        isWithinWorkspaceActivityWindow(
+          workspace.lastActivityAt,
+          workspaceActivityWindow,
+          dayStartAt
+        )
     )
   }, [
+    activeSidebarWorkspaceId,
+    dayStartAt,
+    workspaceActivityWindow,
     args.pairedDeviceIdsByEnvironment,
     defaultHostId,
     folderWorkspaces,

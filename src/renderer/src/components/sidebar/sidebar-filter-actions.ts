@@ -18,6 +18,7 @@ export function sidebarHasActiveFilters(state: SidebarFilterState): boolean {
     state.hideCliCreatedWorkspaces ||
     state.hideDetachedHeadWorkspaces ||
     state.hideWorkspacesFromOtherDevices ||
+    (state.workspaceActivityWindow != null && state.workspaceActivityWindow !== 'all') ||
     // Why: turning this off is the only way to narrow the list below the
     // default, so Clear Filters must be able to undo it like any other filter.
     state.alwaysShowDefaultBranchWorkspace === false ||
@@ -36,6 +37,7 @@ export type ClearFilterActions = {
   resetHideCliCreatedWorkspaces: boolean
   resetHideDetachedHeadWorkspaces: boolean
   resetHideWorkspacesFromOtherDevices: boolean
+  resetWorkspaceActivityWindow: boolean
   resetAlwaysShowDefaultBranchWorkspace: boolean
   resetVisibleWorkspaceHostIds: boolean
 }
@@ -59,6 +61,8 @@ export function computeClearFilterActions(state: SidebarFilterState): ClearFilte
     resetHideCliCreatedWorkspaces: state.hideCliCreatedWorkspaces,
     resetHideDetachedHeadWorkspaces: state.hideDetachedHeadWorkspaces,
     resetHideWorkspacesFromOtherDevices: state.hideWorkspacesFromOtherDevices,
+    resetWorkspaceActivityWindow:
+      state.workspaceActivityWindow != null && state.workspaceActivityWindow !== 'all',
     resetAlwaysShowDefaultBranchWorkspace: state.alwaysShowDefaultBranchWorkspace === false,
     resetVisibleWorkspaceHostIds:
       state.visibleWorkspaceHostIds != null ||
