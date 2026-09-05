@@ -294,8 +294,10 @@ describe('attachMainWindowServices', () => {
     expect(hydrateLocalPtyRegistryAtBootMock).toHaveBeenCalledWith(store)
   })
 
-  it('passes injected update quit cleanup to the auto-updater', async () => {
-    const onBeforeUpdateQuit = vi.fn()
+  // Why this replaces the upstream "wires the auto-updater" pair: this fork must
+  // never self-update, or an upstream release would silently overwrite it. The
+  // ratchet is that the updater is not wired at attach time NOR at first paint.
+  it('never configures the auto-updater, even after first paint', async () => {
     const store = createStore()
     const mainWindow = createMainWindow()
 
@@ -305,33 +307,12 @@ describe('attachMainWindowServices', () => {
       createRuntime() as never,
       undefined,
       undefined,
-      { onBeforeUpdateQuit, updateInstallMode: 'supervised-headless-serve' }
+      { onBeforeUpdateQuit: vi.fn(), updateInstallMode: 'supervised-headless-serve' }
     )
 
-    // Deferred to first paint — must not be configured at attach time.
     expect(setupAutoUpdaterMock).not.toHaveBeenCalled()
     await fireReadyToShow(mainWindow)
-    expect(setupAutoUpdaterMock).toHaveBeenCalledTimes(1)
-    expect(setupAutoUpdaterMock).toHaveBeenCalledWith(
-      mainWindow,
-      expect.objectContaining({ installMode: 'supervised-headless-serve' })
-    )
-    await setupAutoUpdaterMock.mock.calls[0][1].onBeforeQuit()
-
-    expect(onBeforeUpdateQuit).toHaveBeenCalledTimes(1)
-    expect(store.flushPendingAsync).toHaveBeenCalledTimes(1)
-  })
-
-  it('flushes the store before update quit when no cleanup is injected', async () => {
-    const store = createStore()
-    const mainWindow = createMainWindow()
-
-    attachMainWindowServices(mainWindow as never, store, createRuntime() as never)
-
-    await fireReadyToShow(mainWindow)
-    await setupAutoUpdaterMock.mock.calls[0][1].onBeforeQuit()
-
-    expect(store.flushPendingAsync).toHaveBeenCalledTimes(1)
+    expect(setupAutoUpdaterMock).not.toHaveBeenCalled()
   })
 
   it('replaces the TCC handlers when the main window is reattached', () => {

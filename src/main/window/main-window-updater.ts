@@ -5,6 +5,7 @@ import { RELEASE_CHANNELS, type ReleaseChannel } from '../../shared/release-chan
 import { isTrustedUIRenderer } from '../ipc/ui'
 import type { Store } from '../persistence'
 import { logStartupMilestone } from '../startup/startup-diagnostics'
+import { FORK_AUTO_UPDATE_DISABLED } from '../../shared/fork-auto-update'
 import {
   checkForUpdatesFromMenu,
   dismissAvailableUpdate,
@@ -36,6 +37,11 @@ export function scheduleMainWindowAutoUpdaterSetup(
     updateInstallMode?: UpdateInstallMode
   }
 ): void {
+  // The fork never wires the updater at all: no scheduler, no listeners, and
+  // electron-updater is never require()d. See FORK_AUTO_UPDATE_DISABLED.
+  if (FORK_AUTO_UPDATE_DISABLED) {
+    return
+  }
   // Why: setupAutoUpdater sync-require()s electron-updater (slow on cold Windows w/ Defender, #7225), so defer past first paint; timer fallback covers crash-looping renderers.
   let updaterSetupDone = false
   const setupAutoUpdaterDeferred = (): void => {
@@ -91,14 +97,29 @@ export function registerUpdaterHandlers(_store: Store): void {
   ipcMain.removeHandler('updater:showLinuxPackage')
   ipcMain.removeHandler('updater:listBuilds')
 
-  ipcMain.handle('updater:getStatus', () => getUpdateStatus())
+  // Why 'not-available' and not 'idle': idle reads as "never checked" and the
+  // Settings pane offers a check button that could not do anything here.
+  ipcMain.handle('updater:getStatus', () =>
+    FORK_AUTO_UPDATE_DISABLED ? { state: 'not-available' } : getUpdateStatus()
+  )
   ipcMain.handle('updater:getVersion', () => app.getVersion())
   ipcMain.handle('updater:check', (_event, options?: UpdateCheckOptions) => {
+    if (FORK_AUTO_UPDATE_DISABLED) {
+      return
+    }
     ensureAutoUpdaterConfigured()
     return checkForUpdatesFromMenu(options)
   })
-  ipcMain.handle('updater:download', () => downloadUpdate())
-  ipcMain.handle('updater:quitAndInstall', () => quitAndInstall())
+  ipcMain.handle('updater:download', () => {
+    if (!FORK_AUTO_UPDATE_DISABLED) {
+      downloadUpdate()
+    }
+  })
+  ipcMain.handle('updater:quitAndInstall', () => {
+    if (!FORK_AUTO_UPDATE_DISABLED) {
+      quitAndInstall()
+    }
+  })
   ipcMain.handle('updater:dismissNudge', () => dismissNudge())
   ipcMain.handle('updater:dismissAvailableUpdate', () => dismissAvailableUpdate())
   // Why: the response carries a local package path and the reveal touches the native desktop, so

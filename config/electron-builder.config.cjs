@@ -629,9 +629,13 @@ module.exports = {
   // on Intel Macs. The beforeBuild hook performs Orca's targeted rebuild and
   // returns false so electron-builder does not rebuild optional cpu-features.
   npmRebuild: true,
+  // Why the fork owner: this build never self-updates (FORK_AUTO_UPDATE_DISABLED),
+  // but app-update.yml is still baked into the bundle. Pointing it at the fork
+  // means even a re-enabled updater can never pull an upstream release over
+  // these changes — it would only ever see this repository's own releases.
   publish: {
     provider: 'github',
-    owner: 'stablyai',
+    owner: 'lorsane',
     repo: devChannelRepo ?? 'orca',
     releaseType: devChannelRepo ? 'prerelease' : 'release'
   }
