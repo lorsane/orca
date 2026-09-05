@@ -18,6 +18,7 @@ import {
   parseWorkspaceKey,
   worktreeWorkspaceKey
 } from '../../../../../../shared/workspace-scope'
+import { parseTabBoardCardId } from '../../../../../../shared/workspace-board-tab-cards'
 import {
   applyDetectedWorktreeUpdates,
   findKnownWorktreeById
@@ -34,6 +35,19 @@ export function createSetActiveWorktree(
   get: WorktreeSliceGet
 ): WorktreeSlice['setActiveWorktree'] {
   return (worktreeId, executionHostId, options) => {
+    // A board tab card addresses one tab, not a workspace: activate the owning
+    // workspace and then focus that tab, so every caller (board click, reveal,
+    // Cmd+J) reaches the pane the card actually stands for.
+    const tabBoardCardTabId = worktreeId ? parseTabBoardCardId(worktreeId) : null
+    if (tabBoardCardTabId) {
+      const owner = get().getTab(tabBoardCardTabId)
+      if (!owner) {
+        return false
+      }
+      const activated = get().setActiveWorktree(owner.worktreeId, executionHostId, options)
+      get().activateTab(tabBoardCardTabId, { worktreeId: owner.worktreeId })
+      return activated
+    }
     const stateTransition = options?.stateTransition?.(get())
     if (stateTransition && !stateTransition.activate) {
       if (Object.keys(stateTransition.patch).length > 0) {

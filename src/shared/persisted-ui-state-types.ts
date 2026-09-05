@@ -85,6 +85,10 @@ export type PersistedUIState = {
   boardExcludedWorkspaceIdentities?: string[]
   /** Rows forced onto the workspace board even when a sidebar filter hides them. */
   boardIncludedWorkspaceIdentities?: string[]
+  /** Board status per tab card, for workspaces the board expanded into tabs. */
+  tabBoardStatusByTabId?: Record<string, string>
+  /** Expand a multi-tab workspace into one board card per tab. Absent means on. */
+  boardExpandsWorkspaceTabs?: boolean
   /** Keep each project's main workspace out of the "Hide sleeping" sweep. Absent means on (#8873). */
   alwaysShowDefaultBranchWorkspace?: boolean
   /** Per-worktree Explorer dotfile visibility. Missing entries inherit the default: show. */

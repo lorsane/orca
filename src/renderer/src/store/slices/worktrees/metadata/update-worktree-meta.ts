@@ -3,14 +3,12 @@ import type { WorktreeSliceGet, WorktreeSliceSet } from '../listing/worktree-sli
 import { translate } from '@/i18n/i18n'
 import { isPositiveHostedReviewNumber } from '../../../../../../shared/hosted-review'
 import { displayNameUpdatePinsLabel } from '../../../../../../shared/worktree/display-name-provenance'
-import { parseWorkspaceKey } from '../../../../../../shared/workspace-scope'
 import { applyWorktreeUpdates, getRepoIdFromWorktreeId } from '../../worktree-helpers'
 import { getHostedReviewCacheKey } from '../../hosted-review-cache-identity'
 import { getGitHubPRCacheKey, getLegacyGitHubPRCacheKey } from '../../github-cache-key'
 import {
   applyDetectedWorktreeUpdates,
-  findKnownWorktreeById,
-  getFolderWorkspaceMetaUpdates
+  findKnownWorktreeById
 } from '../listing/detected-worktree-meta'
 import {
   bumpHostedReviewLinkMutationGeneration,
@@ -31,6 +29,8 @@ import {
 } from '../listing/worktree-owner-settings'
 
 import { findRepoForHost } from '../../repo-host-identity'
+import { applyTabBoardCardMetaWrite } from './tab-board-card-meta-write'
+import { applyFolderWorkspaceMetaWrite } from './folder-workspace-meta-write'
 export function createUpdateWorktreeMeta(
   set: WorktreeSliceSet,
   get: WorktreeSliceGet
@@ -46,32 +46,15 @@ export function createUpdateWorktreeMeta(
     if (shouldApplyUpdate && !shouldApplyUpdate(existingWorktree)) {
       return { ok: true }
     }
-    const workspaceScope = parseWorkspaceKey(worktreeId)
-    if (workspaceScope?.type === 'folder') {
-      const folderUpdates = getFolderWorkspaceMetaUpdates(updates)
-      if (Object.keys(folderUpdates).length === 0) {
-        return { ok: true }
-      }
-      try {
-        // Why: a rejected folder update reconciles the optimistic write away, so
-        // reporting ok would show the dialog a save that silently undid itself.
-        const updated = await get().updateFolderWorkspace(
-          workspaceScope.folderWorkspaceId,
-          folderUpdates
-        )
-        return updated
-          ? { ok: true }
-          : {
-              ok: false,
-              error: translate(
-                'auto.store.slices.worktrees.a17f4d2e93',
-                'Could not update this workspace.'
-              )
-            }
-      } catch (err) {
-        console.error('Failed to update folder workspace meta:', err)
-        return { ok: false, error: err instanceof Error ? err.message : String(err) }
-      }
+    // A board tab card owns only its board status; everything else on it is a
+    // projection of the workspace and must not be written back through the card.
+    const tabCardWrite = applyTabBoardCardMetaWrite(get, worktreeId, updates, options)
+    if (tabCardWrite) {
+      return tabCardWrite
+    }
+    const folderWrite = await applyFolderWorkspaceMetaWrite(get, worktreeId, updates)
+    if (folderWrite) {
+      return folderWrite
     }
     const normalizedUpdates = normalizeHostedReviewLinkReplacementUpdates(updates, existingWorktree)
     // Why: manual PR linking supplies only the number; resolve the head branch so Push targets the review branch.

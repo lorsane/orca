@@ -15,18 +15,11 @@ export type WorkspaceRowPresentationState = Pick<
   | 'pinnedSectionGroupByStatus'
   | 'boardExcludedWorkspaceIdentities'
   | 'boardIncludedWorkspaceIdentities'
+  | 'tabBoardStatusByTabId'
+  | 'boardExpandsWorkspaceTabs'
 >
 
-export function createDefaultWorkspaceRowPresentationState(): Pick<
-  PersistedUIState,
-  | 'workspaceActivityWindow'
-  | 'hiddenWorkspaceIdentities'
-  | 'hiddenSidebarProjectIds'
-  | 'showHiddenSidebarRows'
-  | 'pinnedSectionGroupByStatus'
-  | 'boardExcludedWorkspaceIdentities'
-  | 'boardIncludedWorkspaceIdentities'
-> {
+export function createDefaultWorkspaceRowPresentationState(): WorkspaceRowPresentationState {
   return {
     workspaceActivityWindow: DEFAULT_WORKSPACE_ACTIVITY_WINDOW,
     hiddenWorkspaceIdentities: [],
@@ -34,7 +27,9 @@ export function createDefaultWorkspaceRowPresentationState(): Pick<
     showHiddenSidebarRows: false,
     pinnedSectionGroupByStatus: true,
     boardExcludedWorkspaceIdentities: [],
-    boardIncludedWorkspaceIdentities: []
+    boardIncludedWorkspaceIdentities: [],
+    tabBoardStatusByTabId: {},
+    boardExpandsWorkspaceTabs: true
   }
 }
 
@@ -49,6 +44,8 @@ export function hydrateWorkspaceRowPresentationState(
     showHiddenSidebarRows: ui.showHiddenSidebarRows === true,
     pinnedSectionGroupByStatus: ui.pinnedSectionGroupByStatus !== false,
     boardExcludedWorkspaceIdentities: [...(ui.boardExcludedWorkspaceIdentities ?? [])],
-    boardIncludedWorkspaceIdentities: [...(ui.boardIncludedWorkspaceIdentities ?? [])]
+    boardIncludedWorkspaceIdentities: [...(ui.boardIncludedWorkspaceIdentities ?? [])],
+    tabBoardStatusByTabId: { ...ui.tabBoardStatusByTabId },
+    boardExpandsWorkspaceTabs: ui.boardExpandsWorkspaceTabs !== false
   }
 }

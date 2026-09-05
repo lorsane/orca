@@ -76,6 +76,10 @@ export type UISlicePreferences = {
     membership: WorkspaceBoardMembership
   ) => void
   resetWorkspaceBoardMembership: () => void
+  tabBoardStatusByTabId: Record<string, string>
+  setTabBoardStatus: (tabId: string, status: string | null) => void
+  boardExpandsWorkspaceTabs: boolean
+  setBoardExpandsWorkspaceTabs: (v: boolean) => void
   unhideAllSidebarRows: () => void
   alwaysShowDefaultBranchWorkspace: boolean
   setAlwaysShowDefaultBranchWorkspace: (v: boolean) => void
