@@ -7,6 +7,7 @@ import { LOCAL_EXECUTION_HOST_ID } from '../../../../../../shared/execution-host
 import { getWorktreeHostIdentity } from '../../../../../../shared/worktree/host-qualified-identity'
 import { makeRepo, makeWorktree } from '../../../worktree-jump-palette-test-fixtures'
 import { useVisibleSidebarWorktrees } from './use-visible-worktrees'
+import type { SidebarWorktreeFilters } from './use-filters'
 import type * as visibleWorktreesModule from '../../visible-worktrees'
 
 const computeVisibleWorktreesCalls = { count: 0 }
@@ -23,7 +24,7 @@ vi.mock('../../visible-worktrees', async (importOriginal) => {
   }
 })
 
-const BASE_FILTER_STATE = {
+const BASE_FILTER_STATE: SidebarWorktreeFilters['filterState'] = {
   showSleepingWorkspaces: true,
   filterRepoIds: [],
   hideDefaultBranchWorkspace: false,
@@ -34,8 +35,11 @@ const BASE_FILTER_STATE = {
   alwaysShowDefaultBranchWorkspace: true,
   visibleWorkspaceHostIds: null,
   workspaceHostScope: 'all',
-  workspaceActivityWindow: 'all'
-} as const
+  workspaceActivityWindow: 'all',
+  hiddenWorkspaceIdentities: [],
+  hiddenSidebarProjectIds: [],
+  showHiddenSidebarRows: false
+}
 
 const initialState = useAppStore.getInitialState()
 
@@ -180,5 +184,46 @@ describe('useVisibleSidebarWorktrees', () => {
       fresh.id,
       staleButFocused.id
     ])
+  })
+
+  it('drops hidden rows and hidden projects, and reveals them on demand', () => {
+    const repo = makeRepo()
+    const kept = makeWorktree('kept', 'Kept workspace')
+    const hidden = makeWorktree('hidden', 'Hidden workspace')
+    useAppStore.setState({ worktreesByRepo: { [repo.id]: [kept, hidden] } })
+
+    const render = (filterState: SidebarWorktreeFilters['filterState']) =>
+      renderHook(() =>
+        useVisibleSidebarWorktrees({
+          filterState,
+          sortBy: 'recent',
+          sortedIds: [kept.id, hidden.id],
+          repoMap: new Map([[repo.id, repo]]),
+          worktreeLineageById: {},
+          defaultHostId: LOCAL_EXECUTION_HOST_ID,
+          agentSendTargetWorktreeId: null
+        })
+      )
+
+    const hiddenState: SidebarWorktreeFilters['filterState'] = {
+      ...BASE_FILTER_STATE,
+      hiddenWorkspaceIdentities: [getWorktreeHostIdentity(hidden)]
+    }
+    expect(render(hiddenState).result.current.visibleWorktrees.map((w) => w.id)).toEqual([kept.id])
+
+    // Why: revealing must not clear the hide list — that is the only way back
+    // to a row whose "Unhide" lives in its own context menu.
+    expect(
+      render({ ...hiddenState, showHiddenSidebarRows: true }).result.current.visibleWorktrees.map(
+        (w) => w.id
+      )
+    ).toEqual([kept.id, hidden.id])
+
+    expect(
+      render({
+        ...BASE_FILTER_STATE,
+        hiddenSidebarProjectIds: [repo.id]
+      }).result.current.visibleWorktrees
+    ).toEqual([])
   })
 })

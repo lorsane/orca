@@ -15,6 +15,7 @@ import {
 import { getWorktreeHostIdentity } from '../../../../shared/worktree/host-qualified-identity'
 import { getActiveSidebarWorkspaceId } from '../../../../shared/workspace-scope'
 import { folderWorkspaceToWorktree } from '../../../../shared/folder-workspace-worktree'
+import { toHiddenRowSet } from '../../../../shared/hidden-sidebar-rows'
 import { useSidebarWorktreeFilters } from './worktree-list/listing/use-filters'
 import { useSidebarHostVisibleScope } from './worktree-list/listing/use-host-visible-scope'
 import { EMPTY_PROJECT_GROUPS } from './worktree-list/viewport/viewport-props'
@@ -47,6 +48,9 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
   const hideDetachedHeadWorkspaces = useAppStore((s) => s.hideDetachedHeadWorkspaces)
   const hideWorkspacesFromOtherDevices = useAppStore((s) => s.hideWorkspacesFromOtherDevices)
   const workspaceActivityWindow = useAppStore((s) => s.workspaceActivityWindow)
+  const hiddenWorkspaceIdentities = useAppStore((s) => s.hiddenWorkspaceIdentities)
+  const hiddenSidebarProjectIds = useAppStore((s) => s.hiddenSidebarProjectIds)
+  const showHiddenSidebarRows = useAppStore((s) => s.showHiddenSidebarRows)
   const activeWorktreeId = useAppStore((s) =>
     getActiveSidebarWorkspaceId(s.activeWorkspaceKey, s.activeWorktreeId)
   )
@@ -133,6 +137,12 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
         hideDetachedHeadWorkspaces,
         hideWorkspacesFromOtherDevices,
         workspaceActivityWindow,
+        hiddenWorkspaceIdentities: showHiddenSidebarRows
+          ? undefined
+          : toHiddenRowSet(hiddenWorkspaceIdentities),
+        hiddenSidebarProjectIds: showHiddenSidebarRows
+          ? undefined
+          : toHiddenRowSet(hiddenSidebarProjectIds),
         activityWindowNow: dayStartAt,
         activeWorktreeId,
         pairedDeviceIdsByEnvironment,
@@ -157,6 +167,9 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
     hideDetachedHeadWorkspaces,
     hideWorkspacesFromOtherDevices,
     workspaceActivityWindow,
+    hiddenWorkspaceIdentities,
+    hiddenSidebarProjectIds,
+    showHiddenSidebarRows,
     activeWorktreeId,
     dayStartAt,
     alwaysShowDefaultBranchWorkspace,

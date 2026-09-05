@@ -73,6 +73,12 @@ export type PersistedUIState = {
   hideWorkspacesFromOtherDevices?: boolean
   /** Recency filter for workspace nav; absent means 'all'. Calendar-day bounds, not a rolling window. */
   workspaceActivityWindow?: WorkspaceActivityWindow
+  /** Explicitly hidden workspace rows, by host-qualified identity. Reversible; unrelated to archiving. */
+  hiddenWorkspaceIdentities?: string[]
+  /** Explicitly hidden projects, by repo id or project-group id. */
+  hiddenSidebarProjectIds?: string[]
+  /** Reveal hidden rows in place (dimmed) so they can be unhidden. Not persisted as a filter. */
+  showHiddenSidebarRows?: boolean
   /** Keep each project's main workspace out of the "Hide sleeping" sweep. Absent means on (#8873). */
   alwaysShowDefaultBranchWorkspace?: boolean
   /** Per-worktree Explorer dotfile visibility. Missing entries inherit the default: show. */

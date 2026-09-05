@@ -3,6 +3,12 @@ import { useAppStore } from '@/store'
 import { useLocalDayStart } from '@/lib/use-local-day-start'
 import { isWithinWorkspaceActivityWindow } from '../../../../../../shared/workspace-activity-window'
 import {
+  EMPTY_HIDDEN_ROW_SET,
+  isHiddenProjectGroupId,
+  toHiddenRowSet
+} from '../../../../../../shared/hidden-sidebar-rows'
+import { folderWorkspaceRowIdentity } from '../../../../../../shared/folder-workspace-worktree'
+import {
   folderWorkspaceKey,
   getActiveSidebarWorkspaceId
 } from '../../../../../../shared/workspace-scope'
@@ -36,8 +42,24 @@ export function useSidebarHostVisibleScope(args: {
     visibleWorkspaceHostIds,
     workspaceHostScope,
     hideWorkspacesFromOtherDevices,
-    workspaceActivityWindow
+    workspaceActivityWindow,
+    hiddenWorkspaceIdentities,
+    hiddenSidebarProjectIds,
+    showHiddenSidebarRows
   } = filterState
+  const hiddenProjectIdSet = useMemo(
+    () => (showHiddenSidebarRows ? EMPTY_HIDDEN_ROW_SET : toHiddenRowSet(hiddenSidebarProjectIds)),
+    [hiddenSidebarProjectIds, showHiddenSidebarRows]
+  )
+  const hiddenWorkspaceIdentitySet = useMemo(
+    () =>
+      showHiddenSidebarRows ? EMPTY_HIDDEN_ROW_SET : toHiddenRowSet(hiddenWorkspaceIdentities),
+    [hiddenWorkspaceIdentities, showHiddenSidebarRows]
+  )
+  const projectGroupsById = useMemo(
+    () => new Map(projectGroups.map((group) => [group.id, group])),
+    [projectGroups]
+  )
   const activeSidebarWorkspaceId = useAppStore((s) =>
     getActiveSidebarWorkspaceId(s.activeWorkspaceKey, s.activeWorktreeId)
   )
@@ -47,19 +69,29 @@ export function useSidebarHostVisibleScope(args: {
     [visibleWorkspaceHostIds, workspaceHostScope]
   )
   const visibleReposForRows = useMemo(() => {
+    const shownRepos =
+      hiddenProjectIdSet.size > 0 ? repos.filter((repo) => !hiddenProjectIdSet.has(repo.id)) : repos
     if (!visibleHostIdSet) {
-      return repos
+      return shownRepos
     }
-    return repos.filter((repo) => {
+    return shownRepos.filter((repo) => {
       const hostId =
         repo.connectionId || repo.executionHostId ? getRepoExecutionHostId(repo) : defaultHostId
       return visibleHostIdSet.has(hostId)
     })
-  }, [defaultHostId, repos, visibleHostIdSet])
-  const visibleProjectGroupsForRows = useMemo(
-    () => filterProjectGroupsForVisibleHosts(projectGroups, visibleHostIdSet, defaultHostId),
-    [defaultHostId, projectGroups, visibleHostIdSet]
-  )
+  }, [defaultHostId, hiddenProjectIdSet, repos, visibleHostIdSet])
+  const visibleProjectGroupsForRows = useMemo(() => {
+    const hostVisible = filterProjectGroupsForVisibleHosts(
+      projectGroups,
+      visibleHostIdSet,
+      defaultHostId
+    )
+    return hiddenProjectIdSet.size > 0
+      ? hostVisible.filter(
+          (group) => !isHiddenProjectGroupId(group.id, hiddenProjectIdSet, projectGroupsById)
+        )
+      : hostVisible
+  }, [defaultHostId, hiddenProjectIdSet, projectGroups, projectGroupsById, visibleHostIdSet])
   const visibleFolderWorkspacesForRows = useMemo(() => {
     const hostVisibleWorkspaces = filterFolderWorkspacesForVisibleHosts(
       folderWorkspaces,
@@ -73,10 +105,22 @@ export function useSidebarHostVisibleScope(args: {
           args.pairedDeviceIdsByEnvironment
         )
       : hostVisibleWorkspaces
+    const shownWorkspaces =
+      hiddenWorkspaceIdentitySet.size > 0 || hiddenProjectIdSet.size > 0
+        ? deviceVisibleWorkspaces.filter(
+            (workspace) =>
+              !hiddenWorkspaceIdentitySet.has(folderWorkspaceRowIdentity(workspace)) &&
+              !isHiddenProjectGroupId(
+                workspace.projectGroupId,
+                hiddenProjectIdSet,
+                projectGroupsById
+              )
+          )
+        : deviceVisibleWorkspaces
     if (!workspaceActivityWindow || workspaceActivityWindow === 'all') {
-      return deviceVisibleWorkspaces
+      return shownWorkspaces
     }
-    return deviceVisibleWorkspaces.filter(
+    return shownWorkspaces.filter(
       (workspace) =>
         folderWorkspaceKey(workspace.id) === activeSidebarWorkspaceId ||
         isWithinWorkspaceActivityWindow(
@@ -88,6 +132,9 @@ export function useSidebarHostVisibleScope(args: {
   }, [
     activeSidebarWorkspaceId,
     dayStartAt,
+    hiddenProjectIdSet,
+    hiddenWorkspaceIdentitySet,
+    projectGroupsById,
     workspaceActivityWindow,
     args.pairedDeviceIdsByEnvironment,
     defaultHostId,

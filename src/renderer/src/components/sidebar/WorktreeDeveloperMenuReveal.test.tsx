@@ -23,6 +23,8 @@ vi.mock('@/store', () => {
     settings: null,
     updateWorktreeMeta: vi.fn(),
     setWorktreesPinnedAndReveal: vi.fn(),
+    setWorkspaceRowHidden: vi.fn(),
+    hiddenWorkspaceIdentities: [],
     openModal: vi.fn(),
     createProjectGroup: vi.fn(),
     moveProjectToGroup: vi.fn(),

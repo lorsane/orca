@@ -60,6 +60,10 @@ export type SidebarFilterState = {
   hideWorkspacesFromOtherDevices: boolean
   /** Recency filter; absent or 'all' admits every row. */
   workspaceActivityWindow?: WorkspaceActivityWindow
+  hiddenWorkspaceIdentities?: readonly string[]
+  hiddenSidebarProjectIds?: readonly string[]
+  /** Reveals hidden rows in place instead of clearing the hide list. */
+  showHiddenSidebarRows?: boolean
   /** Keeps each project's main workspace out of the "Hide sleeping" sweep; absent means on. */
   alwaysShowDefaultBranchWorkspace?: boolean
   visibleWorkspaceHostIds?: readonly ExecutionHostId[] | null
