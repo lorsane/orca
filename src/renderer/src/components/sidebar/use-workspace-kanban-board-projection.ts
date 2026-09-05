@@ -24,23 +24,32 @@ export function useWorkspaceKanbanBoardProjection(args: {
   sortBy: ReturnType<typeof useAppStore.getState>['sortBy']
   workspaceStatuses: ReturnType<typeof useAppStore.getState>['workspaceStatuses']
 }) {
-  const visibleWorktreeIds = useVisibleWorkspaceKanbanWorktreeIds({
+  const { visibleWorktreeIds, folderBoardWorktrees } = useVisibleWorkspaceKanbanWorktreeIds({
     allWorktrees: args.allWorktrees,
     repoMap: args.repoMap
   })
+  // Folder workspaces are board cards too: they carry their own workspaceStatus
+  // and updateWorktreeMeta already routes writes on their `folder:` key.
+  const boardSourceWorktrees = useMemo(
+    () =>
+      folderBoardWorktrees.length > 0
+        ? [...args.allWorktrees, ...folderBoardWorktrees]
+        : args.allWorktrees,
+    [args.allWorktrees, folderBoardWorktrees]
+  )
   const worktreesByStatus = useMemo(
     () =>
       groupWorkspaceKanbanWorktrees({
-        worktrees: args.allWorktrees,
+        worktrees: boardSourceWorktrees,
         visibleWorktreeIds,
         workspaceStatuses: args.workspaceStatuses,
         sortBy: args.sortBy
       }),
-    [args.allWorktrees, args.sortBy, args.workspaceStatuses, visibleWorktreeIds]
+    [boardSourceWorktrees, args.sortBy, args.workspaceStatuses, visibleWorktreeIds]
   )
   const worktreeById = useMemo(
-    () => buildUnambiguousWorktreeIdIndex(args.allWorktrees),
-    [args.allWorktrees]
+    () => buildUnambiguousWorktreeIdIndex(boardSourceWorktrees),
+    [boardSourceWorktrees]
   )
   const boardWorktrees = useMemo(
     () => args.workspaceStatuses.flatMap((status) => worktreesByStatus.get(status.id) ?? []),

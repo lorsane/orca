@@ -14,6 +14,10 @@ import {
 } from './workspace-creator-visibility'
 import { getWorktreeHostIdentity } from '../../../../shared/worktree/host-qualified-identity'
 import { getActiveSidebarWorkspaceId } from '../../../../shared/workspace-scope'
+import { folderWorkspaceToWorktree } from '../../../../shared/folder-workspace-worktree'
+import { useSidebarWorktreeFilters } from './worktree-list/listing/use-filters'
+import { useSidebarHostVisibleScope } from './worktree-list/listing/use-host-visible-scope'
+import { EMPTY_PROJECT_GROUPS } from './worktree-list/viewport/viewport-props'
 
 type UseVisibleWorkspaceKanbanWorktreeIdsParams = {
   allWorktrees: readonly Worktree[]
@@ -24,10 +28,17 @@ const EMPTY_WORKTREE_ID_SET: ReadonlySet<string> = new Set()
 const EMPTY_RUNTIME_ENVIRONMENTS: AppState['runtimeEnvironments'] = []
 const EMPTY_RUNTIME_STATUS_BY_ENVIRONMENT_ID: AppState['runtimeStatusByEnvironmentId'] = new Map()
 
+export type VisibleWorkspaceKanbanRows = {
+  /** Host-qualified identities of every row the board may render. */
+  visibleWorktreeIds: ReadonlySet<string>
+  /** Visible folder workspaces projected into board-card shape. */
+  folderBoardWorktrees: readonly Worktree[]
+}
+
 export function useVisibleWorkspaceKanbanWorktreeIds({
   allWorktrees,
   repoMap
-}: UseVisibleWorkspaceKanbanWorktreeIdsParams): ReadonlySet<string> {
+}: UseVisibleWorkspaceKanbanWorktreeIdsParams): VisibleWorkspaceKanbanRows {
   const worktreesByRepo = useAppStore((s) => s.worktreesByRepo)
   const showSleepingWorkspaces = useAppStore((s) => s.showSleepingWorkspaces)
   const hideDefaultBranchWorkspace = useAppStore((s) => s.hideDefaultBranchWorkspace)
@@ -77,7 +88,34 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
       : EMPTY_WORKTREE_ID_SET
   }, [agentStatusEpoch, agentStatusNow, showSleepingWorkspaces, tabsByWorktree])
 
-  return useMemo(() => {
+  const pairedDeviceIdsByEnvironment = useMemo(
+    () =>
+      hideWorkspacesFromOtherDevices
+        ? getPairedDeviceIdsByEnvironment(runtimeEnvironments, runtimeStatusByEnvironmentId)
+        : EMPTY_PAIRED_DEVICE_IDS_BY_ENVIRONMENT,
+    [hideWorkspacesFromOtherDevices, runtimeEnvironments, runtimeStatusByEnvironmentId]
+  )
+  // Why the sidebar's own scope hook: folder workspaces never flow through
+  // computeVisibleWorktrees, and a second copy of their filter rules is how the
+  // two surfaces drift.
+  const { filterState } = useSidebarWorktreeFilters()
+  const repos = useAppStore((s) => s.repos)
+  const projectGroups = useAppStore((s) => s.projectGroups ?? EMPTY_PROJECT_GROUPS)
+  const folderWorkspaces = useAppStore((s) => s.folderWorkspaces)
+  const { visibleFolderWorkspacesForRows } = useSidebarHostVisibleScope({
+    filterState,
+    defaultHostId: getSettingsFocusedExecutionHostId(settings),
+    repos,
+    projectGroups,
+    folderWorkspaces,
+    pairedDeviceIdsByEnvironment
+  })
+  const folderBoardWorktrees = useMemo(
+    () => visibleFolderWorkspacesForRows.map(folderWorkspaceToWorktree),
+    [visibleFolderWorkspacesForRows]
+  )
+
+  const visibleWorktreeIds = useMemo(() => {
     // Why: the board has its own status ordering, but visibility must match
     // the sidebar filters exactly so hidden workspaces do not reappear here.
     const sortedIds = allWorktrees.map((worktree) => worktree.id)
@@ -97,9 +135,7 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
         workspaceActivityWindow,
         activityWindowNow: dayStartAt,
         activeWorktreeId,
-        pairedDeviceIdsByEnvironment: hideWorkspacesFromOtherDevices
-          ? getPairedDeviceIdsByEnvironment(runtimeEnvironments, runtimeStatusByEnvironmentId)
-          : EMPTY_PAIRED_DEVICE_IDS_BY_ENVIRONMENT,
+        pairedDeviceIdsByEnvironment,
         alwaysShowDefaultBranchWorkspace,
         repoMap,
         workspaceHostScope,
@@ -129,11 +165,21 @@ export function useVisibleWorkspaceKanbanWorktreeIds({
     settings,
     ptyIdsByTabId,
     repoMap,
-    runtimeEnvironments,
-    runtimeStatusByEnvironmentId,
+    pairedDeviceIdsByEnvironment,
     showSleepingWorkspaces,
     tabsByWorktree,
     worktreeIdsWithLiveAgent,
     worktreesByRepo
   ])
+
+  return useMemo(
+    () => ({
+      visibleWorktreeIds: new Set([
+        ...visibleWorktreeIds,
+        ...folderBoardWorktrees.map(getWorktreeHostIdentity)
+      ]),
+      folderBoardWorktrees
+    }),
+    [folderBoardWorktrees, visibleWorktreeIds]
+  )
 }

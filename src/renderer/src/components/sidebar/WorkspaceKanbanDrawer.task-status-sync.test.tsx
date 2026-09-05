@@ -105,8 +105,14 @@ vi.mock('./WorkspaceKanbanPinDropTarget', () => ({
 }))
 
 vi.mock('./use-visible-workspace-kanban-worktree-ids', () => ({
-  useVisibleWorkspaceKanbanWorktreeIds: ({ allWorktrees }: { allWorktrees: readonly Worktree[] }) =>
-    new Set(allWorktrees.map((worktree) => worktree.id))
+  useVisibleWorkspaceKanbanWorktreeIds: ({
+    allWorktrees
+  }: {
+    allWorktrees: readonly Worktree[]
+  }) => ({
+    visibleWorktreeIds: new Set(allWorktrees.map((worktree) => worktree.id)),
+    folderBoardWorktrees: []
+  })
 }))
 
 vi.mock('./use-workspace-kanban-selection', () => ({
