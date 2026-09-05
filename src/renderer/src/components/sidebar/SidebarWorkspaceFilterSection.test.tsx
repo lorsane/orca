@@ -39,6 +39,13 @@ function setState(overrides: Record<string, unknown> = {}): void {
     runtimeEnvironmentCatalogHydrated: true,
     alwaysShowDefaultBranchWorkspace: true,
     setAlwaysShowDefaultBranchWorkspace: vi.fn(),
+    workspaceActivityWindow: 'all',
+    setWorkspaceActivityWindow: vi.fn(),
+    hiddenWorkspaceIdentities: [],
+    hiddenSidebarProjectIds: [],
+    showHiddenSidebarRows: false,
+    setShowHiddenSidebarRows: vi.fn(),
+    unhideAllSidebarRows: vi.fn(),
     ...overrides
   }
 }

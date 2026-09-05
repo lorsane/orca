@@ -19,6 +19,9 @@ export function useSidebarWorktreeFilters() {
   const visibleWorkspaceHostIds = useAppStore((s) => s.visibleWorkspaceHostIds)
   const workspaceHostScope = useAppStore((s) => s.workspaceHostScope)
   const workspaceActivityWindow = useAppStore((s) => s.workspaceActivityWindow)
+  const hiddenWorkspaceIdentities = useAppStore((s) => s.hiddenWorkspaceIdentities)
+  const hiddenSidebarProjectIds = useAppStore((s) => s.hiddenSidebarProjectIds)
+  const showHiddenSidebarRows = useAppStore((s) => s.showHiddenSidebarRows)
 
   const setShowSleepingWorkspaces = useAppStore((s) => s.setShowSleepingWorkspaces)
   const setHideDefaultBranchWorkspace = useAppStore((s) => s.setHideDefaultBranchWorkspace)
@@ -48,7 +51,10 @@ export function useSidebarWorktreeFilters() {
       alwaysShowDefaultBranchWorkspace,
       visibleWorkspaceHostIds,
       workspaceHostScope,
-      workspaceActivityWindow
+      workspaceActivityWindow,
+      hiddenWorkspaceIdentities,
+      hiddenSidebarProjectIds,
+      showHiddenSidebarRows
     }),
     [
       showSleepingWorkspaces,
@@ -61,7 +67,10 @@ export function useSidebarWorktreeFilters() {
       alwaysShowDefaultBranchWorkspace,
       visibleWorkspaceHostIds,
       workspaceHostScope,
-      workspaceActivityWindow
+      workspaceActivityWindow,
+      hiddenWorkspaceIdentities,
+      hiddenSidebarProjectIds,
+      showHiddenSidebarRows
     ]
   )
 

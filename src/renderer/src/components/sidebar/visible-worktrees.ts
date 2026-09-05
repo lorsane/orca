@@ -77,6 +77,10 @@ export type VisibleWorktreeOptions = {
   hideDetachedHeadWorkspaces: boolean
   hideWorkspacesFromOtherDevices: boolean
   workspaceActivityWindow?: WorkspaceActivityWindow
+  /** Explicitly hidden rows, by host-qualified identity; empty unless the user hid something. */
+  hiddenWorkspaceIdentities?: ReadonlySet<string>
+  /** Explicitly hidden projects, by repo id. */
+  hiddenSidebarProjectIds?: ReadonlySet<string>
   /** One clock read per render, so rows near midnight cannot disagree with each other. */
   activityWindowNow?: number
   /** Activation does not bump lastActivityAt, so the focused row must survive the window. */
@@ -126,6 +130,14 @@ export function computeVisibleWorktrees(
 
   if (opts.hideDetachedHeadWorkspaces) {
     all = all.filter((w) => !isDetachedHeadWorkspace(w))
+  }
+
+  const hiddenIdentities = opts.hiddenWorkspaceIdentities
+  const hiddenProjects = opts.hiddenSidebarProjectIds
+  if (hiddenIdentities?.size || hiddenProjects?.size) {
+    all = all.filter(
+      (w) => !hiddenIdentities?.has(getWorktreeHostIdentity(w)) && !hiddenProjects?.has(w.repoId)
+    )
   }
 
   const activityWindow = opts.workspaceActivityWindow

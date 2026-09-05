@@ -3,6 +3,7 @@ import { useAppStore } from '@/store'
 import { getAgentStatusEpochNow } from '@/lib/agent-status-epoch-clock'
 import { getWorktreeIdsWithLiveAgent } from '@/lib/worktree-activity-state'
 import { useLocalDayStart } from '@/lib/use-local-day-start'
+import { toHiddenRowSet } from '../../../../../../shared/hidden-sidebar-rows'
 import type { Repo } from '../../../../../../shared/repo-types'
 import type { WorktreeLineage } from '../../../../../../shared/worktree/lineage-types'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host'
@@ -47,7 +48,10 @@ export function useVisibleSidebarWorktrees(args: {
     alwaysShowDefaultBranchWorkspace,
     visibleWorkspaceHostIds,
     workspaceHostScope,
-    workspaceActivityWindow
+    workspaceActivityWindow,
+    hiddenWorkspaceIdentities,
+    hiddenSidebarProjectIds,
+    showHiddenSidebarRows
   } = filterState
   const worktreesByRepo = useAppStore((s) => s.worktreesByRepo)
   const activeSidebarWorkspaceId = useAppStore((s) =>
@@ -102,6 +106,12 @@ export function useVisibleSidebarWorktrees(args: {
       hideDetachedHeadWorkspaces,
       hideWorkspacesFromOtherDevices,
       workspaceActivityWindow,
+      hiddenWorkspaceIdentities: showHiddenSidebarRows
+        ? undefined
+        : toHiddenRowSet(hiddenWorkspaceIdentities),
+      hiddenSidebarProjectIds: showHiddenSidebarRows
+        ? undefined
+        : toHiddenRowSet(hiddenSidebarProjectIds),
       activityWindowNow: dayStartAt,
       activeWorktreeId: activeSidebarWorkspaceId,
       pairedDeviceIdsByEnvironment,
@@ -127,6 +137,9 @@ export function useVisibleSidebarWorktrees(args: {
     hideDetachedHeadWorkspaces,
     hideWorkspacesFromOtherDevices,
     workspaceActivityWindow,
+    hiddenWorkspaceIdentities,
+    hiddenSidebarProjectIds,
+    showHiddenSidebarRows,
     activeSidebarWorkspaceId,
     dayStartAt,
     alwaysShowDefaultBranchWorkspace,

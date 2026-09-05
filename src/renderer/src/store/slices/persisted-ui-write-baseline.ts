@@ -27,6 +27,9 @@ export type PersistedUIWriteBaseline = {
   hideDetachedHeadWorkspaces: boolean
   hideWorkspacesFromOtherDevices: boolean
   workspaceActivityWindow: WorkspaceActivityWindow
+  hiddenWorkspaceIdentities: string[]
+  hiddenSidebarProjectIds: string[]
+  showHiddenSidebarRows: boolean
   alwaysShowDefaultBranchWorkspace: boolean
   showDotfilesByWorktree: Record<string, boolean>
   filterRepoIds: readonly string[]
@@ -57,6 +60,9 @@ const PERSISTED_UI_WRITE_BASELINE_FIELD_SET = {
   hideDetachedHeadWorkspaces: true,
   hideWorkspacesFromOtherDevices: true,
   workspaceActivityWindow: true,
+  hiddenWorkspaceIdentities: true,
+  hiddenSidebarProjectIds: true,
+  showHiddenSidebarRows: true,
   alwaysShowDefaultBranchWorkspace: true,
   showDotfilesByWorktree: true,
   filterRepoIds: true,
@@ -99,7 +105,11 @@ function stringArrayEqual(a: readonly string[], b: readonly string[]): boolean {
 }
 
 function writeFieldEqual(field: keyof PersistedUIWriteBaseline, a: unknown, b: unknown): boolean {
-  if (field === 'filterRepoIds') {
+  if (
+    field === 'filterRepoIds' ||
+    field === 'hiddenWorkspaceIdentities' ||
+    field === 'hiddenSidebarProjectIds'
+  ) {
     return stringArrayEqual(a as readonly string[], b as readonly string[])
   }
   if (

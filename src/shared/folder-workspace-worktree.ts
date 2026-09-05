@@ -1,6 +1,7 @@
 import type { FolderWorkspace } from './folder-workspace-types'
 import type { Worktree } from './worktree/types'
 import { folderWorkspaceKey } from './workspace-scope'
+import { getWorktreeHostIdentity } from './worktree/host-qualified-identity'
 import { parseExecutionHostId, toSshExecutionHostId } from './execution-host'
 import { normalizeWorkspaceCreatorProvenance } from './workspace-creator-provenance'
 
@@ -53,4 +54,9 @@ export function folderWorkspaceToWorktree(folderWorkspace: FolderWorkspace): Wor
       ? { runtimeOwnerEnvironmentId: parsedHost.environmentId }
       : {})
   }
+}
+
+/** The key sidebar sets use for a folder workspace's row. */
+export function folderWorkspaceRowIdentity(folderWorkspace: FolderWorkspace): string {
+  return getWorktreeHostIdentity(folderWorkspaceToWorktree(folderWorkspace))
 }

@@ -7,6 +7,7 @@ import { getWorktreeHostIdentity } from '../../../../shared/worktree/host-qualif
 import { makeRepo, makeWorktree } from '../worktree-jump-palette-test-fixtures'
 import { useVisibleWorkspaceKanbanWorktreeIds } from './use-visible-workspace-kanban-worktree-ids'
 import { folderWorkspaceKey } from '../../../../shared/workspace-scope'
+import { folderWorkspaceRowIdentity } from '../../../../shared/folder-workspace-worktree'
 import type { FolderWorkspace } from '../../../../shared/folder-workspace-types'
 import type { ProjectGroup } from '../../../../shared/project-group-types'
 
@@ -118,5 +119,31 @@ describe('useVisibleWorkspaceKanbanWorktreeIds', () => {
     expect(result.current.folderBoardWorktrees.map((card) => card.id)).toEqual([
       folderWorkspaceKey('fresh')
     ])
+  })
+
+  it('drops a hidden folder workspace and a hidden project group', () => {
+    const group = makeProjectGroup()
+    const folderWorkspace = makeFolderWorkspace()
+    const hiddenIdentity = folderWorkspaceRowIdentity(folderWorkspace)
+    useAppStore.setState({
+      worktreesByRepo: {},
+      projectGroups: [group],
+      folderWorkspaces: [folderWorkspace],
+      showSleepingWorkspaces: true,
+      hiddenWorkspaceIdentities: [hiddenIdentity]
+    })
+
+    const { result, rerender } = renderHook(() =>
+      useVisibleWorkspaceKanbanWorktreeIds({ allWorktrees: [], repoMap: new Map() })
+    )
+    expect(result.current.folderBoardWorktrees).toEqual([])
+
+    useAppStore.setState({ hiddenWorkspaceIdentities: [], hiddenSidebarProjectIds: [group.id] })
+    rerender()
+    expect(result.current.folderBoardWorktrees).toEqual([])
+
+    useAppStore.setState({ hiddenSidebarProjectIds: [], showHiddenSidebarRows: false })
+    rerender()
+    expect(result.current.folderBoardWorktrees).toHaveLength(1)
   })
 })

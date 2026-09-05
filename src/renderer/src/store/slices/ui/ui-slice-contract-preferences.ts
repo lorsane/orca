@@ -60,6 +60,13 @@ export type UISlicePreferences = {
   setHideWorkspacesFromOtherDevices: (v: boolean) => void
   workspaceActivityWindow: WorkspaceActivityWindow
   setWorkspaceActivityWindow: (v: WorkspaceActivityWindow) => void
+  hiddenWorkspaceIdentities: string[]
+  setWorkspaceRowHidden: (workspaceIdentity: string, hidden: boolean) => void
+  hiddenSidebarProjectIds: string[]
+  setSidebarProjectHidden: (projectId: string, hidden: boolean) => void
+  showHiddenSidebarRows: boolean
+  setShowHiddenSidebarRows: (v: boolean) => void
+  unhideAllSidebarRows: () => void
   alwaysShowDefaultBranchWorkspace: boolean
   setAlwaysShowDefaultBranchWorkspace: (v: boolean) => void
   showDotfilesByWorktree: Record<string, boolean>

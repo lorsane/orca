@@ -3,6 +3,7 @@ import type { useAppStore } from '@/store'
 import { getWorktreeIdsWithLiveAgent } from '@/lib/worktree-activity-state'
 import { getSettingsFocusedExecutionHostId } from '../../../../shared/execution-host'
 import { getActiveSidebarWorkspaceId } from '../../../../shared/workspace-scope'
+import { toHiddenRowSet } from '../../../../shared/hidden-sidebar-rows'
 import {
   EMPTY_PAIRED_DEVICE_IDS_BY_ENVIRONMENT,
   getPairedDeviceIdsByEnvironment
@@ -39,6 +40,12 @@ export function buildVisibleWorktreeOptionsFromState(
     hideDetachedHeadWorkspaces: state.hideDetachedHeadWorkspaces,
     hideWorkspacesFromOtherDevices: state.hideWorkspacesFromOtherDevices,
     workspaceActivityWindow: state.workspaceActivityWindow,
+    hiddenWorkspaceIdentities: state.showHiddenSidebarRows
+      ? undefined
+      : toHiddenRowSet(state.hiddenWorkspaceIdentities),
+    hiddenSidebarProjectIds: state.showHiddenSidebarRows
+      ? undefined
+      : toHiddenRowSet(state.hiddenSidebarProjectIds),
     activeWorktreeId: getActiveSidebarWorkspaceId(state.activeWorkspaceKey, state.activeWorktreeId),
     pairedDeviceIdsByEnvironment: state.hideWorkspacesFromOtherDevices
       ? getPairedDeviceIdsByEnvironment(

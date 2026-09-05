@@ -8,6 +8,9 @@ export const ClientUiWorkspaceFilterFields = {
   hideDetachedHeadWorkspaces: z.boolean().optional(),
   hideWorkspacesFromOtherDevices: z.boolean().optional(),
   workspaceActivityWindow: z.enum(WORKSPACE_ACTIVITY_WINDOWS).optional(),
+  hiddenWorkspaceIdentities: z.array(z.string()).optional(),
+  hiddenSidebarProjectIds: z.array(z.string()).optional(),
+  showHiddenSidebarRows: z.boolean().optional(),
   alwaysShowDefaultBranchWorkspace: z.boolean().optional(),
   filterRepoIds: z.array(z.string()).optional()
 }

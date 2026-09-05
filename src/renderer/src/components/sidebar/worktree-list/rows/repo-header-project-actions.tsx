@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { translate } from '@/i18n/i18n'
+import { SidebarProjectHideMenuItem } from '../../sidebar-project-hide-menu-item'
 import { getRepositoryIconSectionId } from '@/components/settings/repository-settings-targets'
 import type { ProjectGroup } from '../../../../../../shared/project-group-types'
 import type { Repo } from '../../../../../../shared/repo-types'
@@ -164,6 +165,7 @@ export function RepoHeaderProjectActionsMenu({
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuSeparator />
+        <SidebarProjectHideMenuItem projectId={repo.id} />
         <DropdownMenuItem variant="destructive" onSelect={() => actions.onRemoveProject(repo)}>
           <Trash2 className="size-3.5" />
           {translate('auto.components.sidebar.WorktreeList.c83968f87f', 'Remove Project')}

@@ -7,7 +7,7 @@ import {
   normalizeManualRepoOrder
 } from '../../../../../shared/manual-repo-order'
 import { normalizeWorkspaceCleanupBrowseState } from '../../../../../shared/workspace-cleanup-browse-state'
-import { normalizeWorkspaceActivityWindow } from '../../../../../shared/workspace-activity-window'
+import { hydrateSidebarRowVisibilityState } from '../../../../../shared/sidebar-row-visibility-defaults'
 import {
   normalizeExecutionHostScope,
   normalizeExecutionHostOrder,
@@ -165,7 +165,7 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
           hideAutomationGeneratedWorkspaces: ui.hideAutomationGeneratedWorkspaces === true,
           hideCliCreatedWorkspaces: ui.hideCliCreatedWorkspaces === true,
           hideDetachedHeadWorkspaces: ui.hideDetachedHeadWorkspaces === true,
-          workspaceActivityWindow: normalizeWorkspaceActivityWindow(ui.workspaceActivityWindow),
+          ...hydrateSidebarRowVisibilityState(ui),
           hideWorkspacesFromOtherDevices: ui.hideWorkspacesFromOtherDevices === true,
           // Why !== false: profiles written before #8873 have no key, and they are
           // precisely the ones showing the bug, so absence must mean "exempt".

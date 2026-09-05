@@ -85,6 +85,8 @@ vi.mock('@/i18n/i18n', () => ({
 const defaultStoreState = {
   updateWorktreeMeta: vi.fn(),
   setWorktreesPinnedAndReveal: vi.fn(),
+  setWorkspaceRowHidden: vi.fn(),
+  hiddenWorkspaceIdentities: [],
   workspaceStatuses: [],
   openModal: vi.fn(),
   projectGroups: [],

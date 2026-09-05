@@ -24,6 +24,8 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const state = {
   updateWorktreeMeta: vi.fn(),
   setWorktreesPinnedAndReveal: vi.fn(),
+  setWorkspaceRowHidden: vi.fn(),
+  hiddenWorkspaceIdentities: [],
   workspaceStatuses: [
     { id: 'todo', label: 'Todo' },
     { id: 'doing', label: 'Doing' }
