@@ -5,6 +5,7 @@ import {
   applyDetectedWorktreeUpdates,
   getFolderWorkspaceMetaUpdates
 } from '../listing/detected-worktree-meta'
+import { parseTabBoardCardId } from '../../../../../../shared/workspace-board-tab-cards'
 import { persistWorktreeMeta } from './worktree-meta-persist'
 import { isRuntimeSelectorNotFoundError } from '../listing/runtime-worktree-rpc-errors'
 import { settingsForWorktreeOwner } from '../listing/worktree-owner-settings'
@@ -39,7 +40,25 @@ export function createUpdateWorktreesMeta(
       folderWorkspaceId: string
       updates: ReturnType<typeof getFolderWorkspaceMetaUpdates>
     }[] = []
+    // A tab card owns only its board status; the rest is re-addressed to the
+    // owning workspace, which may itself be a folder workspace.
+    const resolvedUpdates: WorktreeMetaBatchUpdate[] = []
     for (const entry of updates) {
+      const tabBoardCardTabId = parseTabBoardCardId(entry.worktreeId)
+      if (!tabBoardCardTabId) {
+        resolvedUpdates.push(entry)
+        continue
+      }
+      const { workspaceStatus, ...ownerUpdates } = entry.updates
+      if (workspaceStatus !== undefined) {
+        get().setTabBoardStatus(tabBoardCardTabId, workspaceStatus)
+      }
+      const ownerWorktreeId = get().getTab(tabBoardCardTabId)?.worktreeId
+      if (ownerWorktreeId && Object.keys(ownerUpdates).length > 0) {
+        resolvedUpdates.push({ ...entry, worktreeId: ownerWorktreeId, updates: ownerUpdates })
+      }
+    }
+    for (const entry of resolvedUpdates) {
       const scope = parseWorkspaceKey(entry.worktreeId)
       if (scope?.type === 'folder') {
         const folderUpdates = getFolderWorkspaceMetaUpdates(entry.updates)

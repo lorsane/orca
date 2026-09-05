@@ -14,6 +14,8 @@ export const ClientUiWorkspaceFilterFields = {
   pinnedSectionGroupByStatus: z.boolean().optional(),
   boardExcludedWorkspaceIdentities: z.array(z.string()).optional(),
   boardIncludedWorkspaceIdentities: z.array(z.string()).optional(),
+  tabBoardStatusByTabId: z.record(z.string(), z.string()).optional(),
+  boardExpandsWorkspaceTabs: z.boolean().optional(),
   alwaysShowDefaultBranchWorkspace: z.boolean().optional(),
   filterRepoIds: z.array(z.string()).optional()
 }

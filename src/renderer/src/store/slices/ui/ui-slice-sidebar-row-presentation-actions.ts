@@ -24,6 +24,10 @@ export function createSidebarRowPresentationActions(
   | 'boardIncludedWorkspaceIdentities'
   | 'setWorkspaceBoardMembership'
   | 'resetWorkspaceBoardMembership'
+  | 'tabBoardStatusByTabId'
+  | 'setTabBoardStatus'
+  | 'boardExpandsWorkspaceTabs'
+  | 'setBoardExpandsWorkspaceTabs'
 > {
   return {
     workspaceActivityWindow: DEFAULT_WORKSPACE_ACTIVITY_WINDOW,
@@ -61,6 +65,23 @@ export function createSidebarRowPresentationActions(
       }),
     resetWorkspaceBoardMembership: () =>
       set({ boardExcludedWorkspaceIdentities: [], boardIncludedWorkspaceIdentities: [] }),
+    tabBoardStatusByTabId: {},
+    setTabBoardStatus: (tabId, status) =>
+      set((s) => {
+        if (status === null) {
+          if (!Object.hasOwn(s.tabBoardStatusByTabId, tabId)) {
+            return s
+          }
+          const next = { ...s.tabBoardStatusByTabId }
+          delete next[tabId]
+          return { tabBoardStatusByTabId: next }
+        }
+        return s.tabBoardStatusByTabId[tabId] === status
+          ? s
+          : { tabBoardStatusByTabId: { ...s.tabBoardStatusByTabId, [tabId]: status } }
+      }),
+    boardExpandsWorkspaceTabs: true,
+    setBoardExpandsWorkspaceTabs: (v) => set({ boardExpandsWorkspaceTabs: v }),
     unhideAllSidebarRows: () =>
       set({
         hiddenWorkspaceIdentities: [],

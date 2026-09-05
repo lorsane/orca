@@ -32,6 +32,8 @@ function makeBaseline(overrides: Partial<PersistedUIWriteBaseline> = {}): Persis
     pinnedSectionGroupByStatus: true,
     boardExcludedWorkspaceIdentities: [],
     boardIncludedWorkspaceIdentities: [],
+    tabBoardStatusByTabId: {},
+    boardExpandsWorkspaceTabs: true,
     alwaysShowDefaultBranchWorkspace: true,
     showDotfilesByWorktree: {},
     filterRepoIds: [],

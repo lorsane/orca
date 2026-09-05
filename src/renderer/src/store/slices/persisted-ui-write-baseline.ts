@@ -33,6 +33,8 @@ export type PersistedUIWriteBaseline = {
   pinnedSectionGroupByStatus: boolean
   boardExcludedWorkspaceIdentities: string[]
   boardIncludedWorkspaceIdentities: string[]
+  tabBoardStatusByTabId: Record<string, string>
+  boardExpandsWorkspaceTabs: boolean
   alwaysShowDefaultBranchWorkspace: boolean
   showDotfilesByWorktree: Record<string, boolean>
   filterRepoIds: readonly string[]
@@ -69,6 +71,8 @@ const PERSISTED_UI_WRITE_BASELINE_FIELD_SET = {
   pinnedSectionGroupByStatus: true,
   boardExcludedWorkspaceIdentities: true,
   boardIncludedWorkspaceIdentities: true,
+  tabBoardStatusByTabId: true,
+  boardExpandsWorkspaceTabs: true,
   alwaysShowDefaultBranchWorkspace: true,
   showDotfilesByWorktree: true,
   filterRepoIds: true,
@@ -122,6 +126,7 @@ function writeFieldEqual(field: keyof PersistedUIWriteBaseline, a: unknown, b: u
   }
   if (
     field === 'showDotfilesByWorktree' ||
+    field === 'tabBoardStatusByTabId' ||
     field === 'acknowledgedAgentsByPaneKey' ||
     field === 'activityClearedAtByPaneKey' ||
     field === 'manuallyUnreadTurnsByPaneKey'
