@@ -29,6 +29,7 @@ function makeBaseline(overrides: Partial<PersistedUIWriteBaseline> = {}): Persis
     hiddenWorkspaceIdentities: [],
     hiddenSidebarProjectIds: [],
     showHiddenSidebarRows: false,
+    pinnedSectionGroupByStatus: true,
     alwaysShowDefaultBranchWorkspace: true,
     showDotfilesByWorktree: {},
     filterRepoIds: [],

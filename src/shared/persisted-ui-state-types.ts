@@ -79,6 +79,8 @@ export type PersistedUIState = {
   hiddenSidebarProjectIds?: string[]
   /** Reveal hidden rows in place (dimmed) so they can be unhidden. Not persisted as a filter. */
   showHiddenSidebarRows?: boolean
+  /** Split the Pinned section into one lane per board status. Absent means on. */
+  pinnedSectionGroupByStatus?: boolean
   /** Keep each project's main workspace out of the "Hide sleeping" sweep. Absent means on (#8873). */
   alwaysShowDefaultBranchWorkspace?: boolean
   /** Per-worktree Explorer dotfile visibility. Missing entries inherit the default: show. */

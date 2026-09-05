@@ -1,7 +1,11 @@
 import type { ProjectGroup } from '../../../../../../shared/project-group-types'
 import type { Repo } from '../../../../../../shared/repo-types'
 import type { Worktree } from '../../../../../../shared/worktree/types'
-import { PINNED_GROUP_KEY, getProjectGroupHeaderKey } from '../grouping/group-keys'
+import {
+  PINNED_GROUP_KEY,
+  PINNED_STATUS_GROUP_PREFIX,
+  getProjectGroupHeaderKey
+} from '../grouping/group-keys'
 import type { ProjectGroupingModel } from '../grouping/project-grouping'
 
 function getProjectIdFromHeaderRowKey(rowKey: string): string | null {
@@ -106,6 +110,13 @@ export function getPinnedWorktreeRevealCollapsedGroupKeys({
   // Why: the reveal effect already opens this host; re-returning it would toggle it back closed.
   if (collapsedGroups.has(PINNED_GROUP_KEY)) {
     keys.push(PINNED_GROUP_KEY)
+  }
+  // Why every pinned lane and not just the row's own: the caller has no status
+  // definitions here, and opening a lane that holds no target row is harmless.
+  for (const key of collapsedGroups) {
+    if (key.startsWith(PINNED_STATUS_GROUP_PREFIX)) {
+      keys.push(key)
+    }
   }
   return keys
 }

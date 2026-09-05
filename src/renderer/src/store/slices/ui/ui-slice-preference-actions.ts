@@ -21,8 +21,7 @@ import {
   normalizeStatusBarUsageMode
 } from '../../../../../shared/status-bar-usage-mode'
 import type { WorkspaceHostScope } from '../../../../../shared/ui-chrome-types'
-import { DEFAULT_WORKSPACE_ACTIVITY_WINDOW } from '../../../../../shared/workspace-activity-window'
-import { toggleHiddenRowId } from '../../../../../shared/hidden-sidebar-rows'
+import { createSidebarRowPresentationActions } from './ui-slice-sidebar-row-presentation-actions'
 import {
   normalizeExecutionHostOrder,
   normalizeExecutionHostScope,
@@ -115,28 +114,7 @@ export function createUiPreferenceActions(set: UISliceSet, get: UISliceGet): Par
     setHideDetachedHeadWorkspaces: (v) => set({ hideDetachedHeadWorkspaces: v }),
     hideWorkspacesFromOtherDevices: false,
     setHideWorkspacesFromOtherDevices: (v) => set({ hideWorkspacesFromOtherDevices: v }),
-    workspaceActivityWindow: DEFAULT_WORKSPACE_ACTIVITY_WINDOW,
-    setWorkspaceActivityWindow: (v) => set({ workspaceActivityWindow: v }),
-    hiddenWorkspaceIdentities: [],
-    setWorkspaceRowHidden: (workspaceIdentity, hidden) =>
-      set((s) => {
-        const next = toggleHiddenRowId(s.hiddenWorkspaceIdentities, workspaceIdentity, hidden)
-        return next === s.hiddenWorkspaceIdentities ? s : { hiddenWorkspaceIdentities: next }
-      }),
-    hiddenSidebarProjectIds: [],
-    setSidebarProjectHidden: (projectId, hidden) =>
-      set((s) => {
-        const next = toggleHiddenRowId(s.hiddenSidebarProjectIds, projectId, hidden)
-        return next === s.hiddenSidebarProjectIds ? s : { hiddenSidebarProjectIds: next }
-      }),
-    showHiddenSidebarRows: false,
-    setShowHiddenSidebarRows: (v) => set({ showHiddenSidebarRows: v }),
-    unhideAllSidebarRows: () =>
-      set({
-        hiddenWorkspaceIdentities: [],
-        hiddenSidebarProjectIds: [],
-        showHiddenSidebarRows: false
-      }),
+    ...createSidebarRowPresentationActions(set),
     alwaysShowDefaultBranchWorkspace: true,
     setAlwaysShowDefaultBranchWorkspace: (v) => set({ alwaysShowDefaultBranchWorkspace: v }),
 

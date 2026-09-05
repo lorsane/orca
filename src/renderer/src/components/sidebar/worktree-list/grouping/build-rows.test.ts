@@ -162,6 +162,96 @@ describe('buildRows with pinned worktrees', () => {
     )
   })
 
+  it('splits Pinned into one lane per board status when asked', () => {
+    const statuses = [
+      { id: 'todo', label: 'Todo' },
+      { id: 'in-progress', label: 'In progress' },
+      { id: 'done', label: 'Done' }
+    ]
+    const pinnedTodo = { ...pinned, id: 'wt-pinned-todo', workspaceStatus: 'todo' }
+    const pinnedDone = { ...pinned, id: 'wt-pinned-done', workspaceStatus: 'done' }
+
+    const rows = buildRows(
+      'none',
+      [pinnedDone, pinnedTodo, unpinned1],
+      repoMap,
+      null,
+      new Set(),
+      undefined,
+      statuses,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      true
+    )
+
+    // Board order, not row order: Todo comes before Done because the status
+    // list does, even though the Done row was passed first.
+    expect(rows.slice(0, 4)).toMatchObject([
+      { type: 'header', key: 'pinned:todo', label: 'Todo', count: 1 },
+      { type: 'item', worktree: { id: 'wt-pinned-todo' }, sectionKey: 'pinned' },
+      { type: 'header', key: 'pinned:done', label: 'Done', count: 1 },
+      { type: 'item', worktree: { id: 'wt-pinned-done' }, sectionKey: 'pinned' }
+    ])
+    // A status with no pinned row gets no lane at all.
+    expect(rows.some((row) => row.type === 'header' && row.key === 'pinned:in-progress')).toBe(
+      false
+    )
+  })
+
+  it('collapses one pinned status lane without touching the others', () => {
+    const statuses = [
+      { id: 'todo', label: 'Todo' },
+      { id: 'done', label: 'Done' }
+    ]
+    const pinnedTodo = { ...pinned, id: 'wt-pinned-todo', workspaceStatus: 'todo' }
+    const pinnedDone = { ...pinned, id: 'wt-pinned-done', workspaceStatus: 'done' }
+
+    const rows = buildRows(
+      'none',
+      [pinnedTodo, pinnedDone],
+      repoMap,
+      null,
+      new Set(['pinned:todo']),
+      undefined,
+      statuses,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      true
+    )
+
+    expect(rows.slice(0, 3)).toMatchObject([
+      { type: 'header', key: 'pinned:todo', count: 1 },
+      { type: 'header', key: 'pinned:done', count: 1 },
+      { type: 'item', worktree: { id: 'wt-pinned-done' } }
+    ])
+  })
+
   it('groups all worktrees under All in groupBy none', () => {
     const rows = buildRows('none', [unpinned1, unpinned2], repoMap, null, new Set())
 

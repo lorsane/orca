@@ -21,6 +21,8 @@ import { PROJECT_ORDER_OPTIONS, SORT_OPTIONS } from './sidebar-workspace-option-
 import { WorktreeCardDisplayMenuSection } from './WorktreeCardDisplayMenuSection'
 import { translate } from '@/i18n/i18n'
 import { SidebarGroupByToggle } from './SidebarGroupByToggle'
+import { FilterToggleRow } from './FilterToggleRow'
+import { Pin } from 'lucide-react'
 
 export function useWorkspaceOptionsFilterBadge(): {
   hasAnyFilter: boolean
@@ -96,6 +98,8 @@ export function WorkspaceOptionsMenuItems({
   const setSortBy = useAppStore((s) => s.setSortBy)
   const groupBy = useAppStore((s) => s.groupBy)
   const setGroupBy = useAppStore((s) => s.setGroupBy)
+  const pinnedSectionGroupByStatus = useAppStore((s) => s.pinnedSectionGroupByStatus)
+  const setPinnedSectionGroupByStatus = useAppStore((s) => s.setPinnedSectionGroupByStatus)
   const projectOrderBy = useAppStore((s) => s.projectOrderBy)
   const setProjectOrderBy = useAppStore((s) => s.setProjectOrderBy)
   const { hostOptions } = useSidebarHostScopeOptions()
@@ -142,6 +146,19 @@ export function WorkspaceOptionsMenuItems({
       <div className="px-2 pt-0.5 pb-1">
         <SidebarGroupByToggle groupBy={groupBy} setGroupBy={setGroupBy} />
       </div>
+      <FilterToggleRow
+        icon={<Pin className="size-3.5" />}
+        label={translate(
+          'auto.components.sidebar.SidebarWorkspaceOptionsMenu.pinnedByStatus',
+          'Split Pinned by status'
+        )}
+        ariaLabel={translate(
+          'auto.components.sidebar.SidebarWorkspaceOptionsMenu.pinnedByStatusAria',
+          'Give the Pinned section one lane per workspace board status'
+        )}
+        checked={pinnedSectionGroupByStatus}
+        onChange={setPinnedSectionGroupByStatus}
+      />
 
       <DropdownMenuSeparator />
       <DropdownMenuSub>
