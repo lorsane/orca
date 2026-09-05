@@ -386,6 +386,18 @@ module.exports = {
         'orca-keyboard-layout',
         context.packager
       )
+      // Why here rather than electron-builder's signing step: with no Developer
+      // ID it skips signing the bundle entirely, leaving resources unsealed —
+      // and an unsealed bundle will not launch on Apple Silicon. This must run
+      // last, after every mutation above, or the seal covers stale bytes.
+      if (!isMacRelease) {
+        const appPath = join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`)
+        execFileSync('codesign', ['--force', '--deep', '--sign', '-', appPath], {
+          stdio: 'inherit'
+        })
+        execFileSync('codesign', ['--verify', '--deep', '--strict', appPath], { stdio: 'inherit' })
+        console.log('[adhoc-sign] OK — local macOS bundle signed and verified')
+      }
     }
   },
   win: {
