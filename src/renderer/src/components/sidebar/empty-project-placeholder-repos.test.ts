@@ -200,4 +200,21 @@ describe('getEmptyProjectPlaceholderRepoIds', () => {
       )
     ).toEqual([grouped.id])
   })
+
+  it('drops every placeholder while a recency filter is narrowing the list', () => {
+    const groupedRepo: Repo = { ...repo, id: 'repo-2', projectGroupId: 'group-1' }
+    expect(
+      Array.from(
+        getEmptyProjectPlaceholderRepoIds({
+          groupBy: 'repo',
+          repos: [repo, groupedRepo],
+          // One project has no workspace at all, the other has one the filter hid.
+          worktreesByRepo: { [repo.id]: [], [groupedRepo.id]: [{ ...worktree, repoId: 'repo-2' }] },
+          visibleWorktrees: [],
+          filterRepoIds: [],
+          hideEmptyProjects: true
+        })
+      )
+    ).toEqual([])
+  })
 })

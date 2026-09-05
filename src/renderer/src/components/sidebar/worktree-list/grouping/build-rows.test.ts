@@ -509,3 +509,56 @@ describe('WorktreeList header styles', () => {
     expect(source).toContain('projectHostSetups: projectHostSetupProjection.setups')
   })
 })
+
+describe('buildRows with empty project groups', () => {
+  const makeGroup = (id: string, parentGroupId: string | null) => ({
+    id,
+    name: id,
+    parentPath: `/tmp/${id}`,
+    parentGroupId,
+    createdFrom: 'folder-scan' as const,
+    tabOrder: 0,
+    isCollapsed: false,
+    color: null,
+    createdAt: 0,
+    updatedAt: 0
+  })
+
+  const buildWithGroups = (groups: ReturnType<typeof makeGroup>[], hideEmpty: boolean) =>
+    buildRows(
+      'repo',
+      [],
+      repoMap,
+      null,
+      new Set(),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      groups,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      hideEmpty
+    )
+
+  it('keeps an empty project group when nothing is filtering', () => {
+    const rows = buildWithGroups([makeGroup('empty', null)], false)
+    expect(rows.some((row) => row.type === 'header' && row.label === 'empty')).toBe(true)
+  })
+
+  it('drops a project group a filter emptied out', () => {
+    const rows = buildWithGroups([makeGroup('empty', null)], true)
+    expect(rows.some((row) => row.type === 'header' && row.label === 'empty')).toBe(false)
+  })
+})

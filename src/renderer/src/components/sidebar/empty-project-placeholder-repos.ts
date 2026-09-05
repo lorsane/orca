@@ -8,8 +8,13 @@ export function getEmptyProjectPlaceholderRepoIds(args: {
   worktreesByRepo: Readonly<Record<string, readonly Worktree[] | undefined>>
   visibleWorktrees: readonly Worktree[]
   filterRepoIds: readonly string[]
+  /** Suppress project rows that would render with nothing under them. */
+  hideEmptyProjects?: boolean
 }): Set<string> {
-  if (args.groupBy !== 'repo') {
+  // Why the recency filter earns this and the kind filters do not: "what did I
+  // touch today" is expected to empty out most projects, so a header with no
+  // workspace under it is the answer's noise rather than part of the answer.
+  if (args.groupBy !== 'repo' || args.hideEmptyProjects) {
     return new Set()
   }
 

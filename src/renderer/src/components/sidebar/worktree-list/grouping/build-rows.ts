@@ -72,7 +72,9 @@ export function buildRows(
   defaultHostId: ExecutionHostId = LOCAL_EXECUTION_HOST_ID,
   pinnedDisplayPolicy: PinnedWorktreeDisplayPolicy = getPinnedWorktreeDisplayPolicy(settings),
   /** Split the Pinned section into one lane per board status. */
-  groupPinnedByStatus = false
+  groupPinnedByStatus = false,
+  /** Drop project rows left with nothing under them by an active filter. */
+  hideEmptyProjectSections = false
 ): Row[] {
   const result: Row[] = []
   const projectIndex = buildProjectGroupingIndex(projectGrouping)
@@ -245,7 +247,8 @@ export function buildRows(
     projectGroups,
     folderWorkspaces: renderableFolderWorkspaces,
     projectOrderBy,
-    repoOrder
+    repoOrder,
+    hideEmptyProjectSections
   })
 
   return result

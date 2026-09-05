@@ -75,6 +75,11 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
   const sshConnectionStates = useAppStore((s) => s.sshConnectionStates)
   const runtimeEnvironments = useAppStore((s) => s.runtimeEnvironments)
   const pinnedSectionGroupByStatus = useAppStore((s) => s.pinnedSectionGroupByStatus)
+  // Why only the recency window: it is the filter whose whole point is to empty
+  // projects out, so their headers stop being information and become noise.
+  const hideEmptyProjectSections = useAppStore(
+    (s) => (s.workspaceActivityWindow ?? 'all') !== 'all'
+  )
   const runtimeStatusByEnvironmentId = useAppStore((s) => s.runtimeStatusByEnvironmentId)
   const workspaceHostOrder = useAppStore((s) => s.workspaceHostOrder)
   const setWorkspaceHostOrder = useAppStore((s) => s.setWorkspaceHostOrder)
@@ -92,9 +97,17 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
         repos: args.visibleReposForRows,
         worktreesByRepo,
         visibleWorktrees: worktrees,
-        filterRepoIds: args.filterRepoIds
+        filterRepoIds: args.filterRepoIds,
+        hideEmptyProjects: hideEmptyProjectSections
       }),
-    [args.filterRepoIds, args.groupBy, args.visibleReposForRows, worktrees, worktreesByRepo]
+    [
+      args.filterRepoIds,
+      args.groupBy,
+      args.visibleReposForRows,
+      hideEmptyProjectSections,
+      worktrees,
+      worktreesByRepo
+    ]
   )
 
   // Why: subscribe on a flat key array (useShallow) so progress ticks don't rebuild the whole row model.
@@ -167,7 +180,8 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
         hostLabelById,
         defaultHostId,
         args.pinnedDisplayPolicy,
-        pinnedSectionGroupByStatus
+        pinnedSectionGroupByStatus,
+        hideEmptyProjectSections
       ),
     [
       args.groupBy,
@@ -191,7 +205,8 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
       pendingCreations,
       hostLabelById,
       args.pinnedDisplayPolicy,
-      pinnedSectionGroupByStatus
+      pinnedSectionGroupByStatus,
+      hideEmptyProjectSections
     ]
   )
   const orderedHostOptions = useMemo(

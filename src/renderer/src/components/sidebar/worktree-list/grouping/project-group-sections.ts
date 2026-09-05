@@ -24,6 +24,8 @@ export function appendProjectGroupSections(
     folderWorkspaces: readonly RenderableFolderWorkspace[]
     projectOrderBy: ProjectOrderBy
     repoOrder: Map<string, number> | undefined
+    /** Skip groups whose whole subtree is empty after filtering. */
+    hideEmptyProjectSections?: boolean
   }
 ): void {
   const { orderedGroups, projectGroups, folderWorkspaces, projectOrderBy, repoOrder } = args
@@ -97,11 +99,18 @@ export function appendProjectGroupSections(
     const repoEntries = sortRepoEntriesWithinGroup(groupByProjectGroupId.get(projectGroup.id) ?? [])
     const childGroups = childGroupsByParentId.get(projectGroup.id) ?? []
     const key = getProjectGroupHeaderKey(projectGroup.id)
+    const subtreeCount = getProjectGroupSubtreeCount(projectGroup.id)
+    // Why the subtree and not the direct count: a group whose own repos filtered
+    // away still has to render when a nested group kept something.
+    if (args.hideEmptyProjectSections && subtreeCount === 0) {
+      groupByProjectGroupId.delete(projectGroup.id)
+      return
+    }
     result.push({
       type: 'header',
       key,
       label: projectGroup.name,
-      count: getProjectGroupSubtreeCount(projectGroup.id),
+      count: subtreeCount,
       tone: PROJECT_GROUP_META.tone,
       icon: PROJECT_GROUP_META.icon,
       projectGroup,
