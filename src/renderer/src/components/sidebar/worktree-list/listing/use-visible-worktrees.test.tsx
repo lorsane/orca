@@ -23,6 +23,20 @@ vi.mock('../../visible-worktrees', async (importOriginal) => {
   }
 })
 
+const BASE_FILTER_STATE = {
+  showSleepingWorkspaces: true,
+  filterRepoIds: [],
+  hideDefaultBranchWorkspace: false,
+  hideAutomationGeneratedWorkspaces: false,
+  hideCliCreatedWorkspaces: false,
+  hideDetachedHeadWorkspaces: false,
+  hideWorkspacesFromOtherDevices: false,
+  alwaysShowDefaultBranchWorkspace: true,
+  visibleWorkspaceHostIds: null,
+  workspaceHostScope: 'all',
+  workspaceActivityWindow: 'all'
+} as const
+
 const initialState = useAppStore.getInitialState()
 
 describe('useVisibleSidebarWorktrees', () => {
@@ -43,18 +57,7 @@ describe('useVisibleSidebarWorktrees', () => {
 
     const { result } = renderHook(() =>
       useVisibleSidebarWorktrees({
-        filterState: {
-          showSleepingWorkspaces: true,
-          filterRepoIds: [],
-          hideDefaultBranchWorkspace: false,
-          hideAutomationGeneratedWorkspaces: false,
-          hideCliCreatedWorkspaces: false,
-          hideDetachedHeadWorkspaces: false,
-          hideWorkspacesFromOtherDevices: false,
-          alwaysShowDefaultBranchWorkspace: true,
-          visibleWorkspaceHostIds: null,
-          workspaceHostScope: 'all'
-        },
+        filterState: { ...BASE_FILTER_STATE },
         sortBy: 'recent',
         sortedIds: [local.id, ssh.id],
         repoMap: new Map([[repo.id, repo]]),
@@ -78,18 +81,7 @@ describe('useVisibleSidebarWorktrees', () => {
 
     const { result } = renderHook(() =>
       useVisibleSidebarWorktrees({
-        filterState: {
-          showSleepingWorkspaces: true,
-          filterRepoIds: [],
-          hideDefaultBranchWorkspace: false,
-          hideAutomationGeneratedWorkspaces: false,
-          hideCliCreatedWorkspaces: false,
-          hideDetachedHeadWorkspaces: false,
-          hideWorkspacesFromOtherDevices: false,
-          alwaysShowDefaultBranchWorkspace: true,
-          visibleWorkspaceHostIds: ['ssh:box'],
-          workspaceHostScope: 'all'
-        },
+        filterState: { ...BASE_FILTER_STATE, visibleWorkspaceHostIds: ['ssh:box'] },
         sortBy: 'recent',
         sortedIds: [local.id, ssh.id],
         repoMap: new Map([[repo.id, repo]]),
@@ -109,18 +101,7 @@ describe('useVisibleSidebarWorktrees', () => {
     useAppStore.setState({ worktreesByRepo: { [repo.id]: [worktree] } })
 
     const baseArgs = {
-      filterState: {
-        showSleepingWorkspaces: true,
-        filterRepoIds: [],
-        hideDefaultBranchWorkspace: false,
-        hideAutomationGeneratedWorkspaces: false,
-        hideCliCreatedWorkspaces: false,
-        hideDetachedHeadWorkspaces: false,
-        hideWorkspacesFromOtherDevices: false,
-        alwaysShowDefaultBranchWorkspace: true,
-        visibleWorkspaceHostIds: null,
-        workspaceHostScope: 'all'
-      },
+      filterState: { ...BASE_FILTER_STATE },
       sortBy: 'recent',
       sortedIds: [worktree.id],
       repoMap: new Map([[repo.id, repo]]),
@@ -158,5 +139,46 @@ describe('useVisibleSidebarWorktrees', () => {
     // A write that does move it still recomputes.
     rerender(Object.assign({}, withSettings(nextSettings), { defaultHostId: 'runtime:other' }))
     expect(computeVisibleWorktreesCalls.count).toBe(callsAfterFirstRender + 1)
+  })
+
+  it('narrows to the activity window and keeps the focused workspace visible', () => {
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+    const fresh = makeWorktree('fresh', 'Touched today', {
+      lastActivityAt: startOfToday.getTime() + 60_000
+    })
+    const stale = makeWorktree('stale', 'Touched last week', {
+      lastActivityAt: startOfToday.getTime() - 7 * 24 * 60 * 60 * 1000
+    })
+    const staleButFocused = makeWorktree('focused', 'Open but idle', {
+      lastActivityAt: startOfToday.getTime() - 7 * 24 * 60 * 60 * 1000
+    })
+    const repo = makeRepo()
+    useAppStore.setState({
+      worktreesByRepo: { [repo.id]: [fresh, stale, staleButFocused] },
+      // Why: activation does not bump lastActivityAt, so the focused row would
+      // otherwise vanish out from under the user.
+      activeWorktreeId: staleButFocused.id
+    })
+
+    const { result } = renderHook(() =>
+      useVisibleSidebarWorktrees({
+        filterState: {
+          ...BASE_FILTER_STATE,
+          workspaceActivityWindow: 'today'
+        },
+        sortBy: 'recent',
+        sortedIds: [fresh.id, stale.id, staleButFocused.id],
+        repoMap: new Map([[repo.id, repo]]),
+        worktreeLineageById: {},
+        defaultHostId: LOCAL_EXECUTION_HOST_ID,
+        agentSendTargetWorktreeId: null
+      })
+    )
+
+    expect(result.current.visibleWorktrees.map((worktree) => worktree.id)).toEqual([
+      fresh.id,
+      staleButFocused.id
+    ])
   })
 })

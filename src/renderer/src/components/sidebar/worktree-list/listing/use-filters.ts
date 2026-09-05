@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react'
 import { useAppStore } from '@/store'
 import { DEFAULT_SHOW_SLEEPING_WORKSPACES } from '../../../../../../shared/constants'
 import { computeClearFilterActions, sidebarHasActiveFilters } from '../../visible-worktrees'
+import { DEFAULT_WORKSPACE_ACTIVITY_WINDOW } from '../../../../../../shared/workspace-activity-window'
 
 export type SidebarWorktreeFilters = ReturnType<typeof useSidebarWorktreeFilters>
 
@@ -17,6 +18,7 @@ export function useSidebarWorktreeFilters() {
   const alwaysShowDefaultBranchWorkspace = useAppStore((s) => s.alwaysShowDefaultBranchWorkspace)
   const visibleWorkspaceHostIds = useAppStore((s) => s.visibleWorkspaceHostIds)
   const workspaceHostScope = useAppStore((s) => s.workspaceHostScope)
+  const workspaceActivityWindow = useAppStore((s) => s.workspaceActivityWindow)
 
   const setShowSleepingWorkspaces = useAppStore((s) => s.setShowSleepingWorkspaces)
   const setHideDefaultBranchWorkspace = useAppStore((s) => s.setHideDefaultBranchWorkspace)
@@ -31,6 +33,7 @@ export function useSidebarWorktreeFilters() {
   )
   const setFilterRepoIds = useAppStore((s) => s.setFilterRepoIds)
   const setVisibleWorkspaceHostIds = useAppStore((s) => s.setVisibleWorkspaceHostIds)
+  const setWorkspaceActivityWindow = useAppStore((s) => s.setWorkspaceActivityWindow)
 
   // Why: count hideDefaultBranchWorkspace as a filter so the Clear Filters escape hatch stays reachable when it alone empties the list.
   const filterState = useMemo(
@@ -44,7 +47,8 @@ export function useSidebarWorktreeFilters() {
       hideWorkspacesFromOtherDevices,
       alwaysShowDefaultBranchWorkspace,
       visibleWorkspaceHostIds,
-      workspaceHostScope
+      workspaceHostScope,
+      workspaceActivityWindow
     }),
     [
       showSleepingWorkspaces,
@@ -56,7 +60,8 @@ export function useSidebarWorktreeFilters() {
       hideWorkspacesFromOtherDevices,
       alwaysShowDefaultBranchWorkspace,
       visibleWorkspaceHostIds,
-      workspaceHostScope
+      workspaceHostScope,
+      workspaceActivityWindow
     ]
   )
 
@@ -89,6 +94,9 @@ export function useSidebarWorktreeFilters() {
     if (actions.resetVisibleWorkspaceHostIds) {
       setVisibleWorkspaceHostIds(null)
     }
+    if (actions.resetWorkspaceActivityWindow) {
+      setWorkspaceActivityWindow(DEFAULT_WORKSPACE_ACTIVITY_WINDOW)
+    }
   }, [
     setShowSleepingWorkspaces,
     setFilterRepoIds,
@@ -99,6 +107,7 @@ export function useSidebarWorktreeFilters() {
     setHideWorkspacesFromOtherDevices,
     setAlwaysShowDefaultBranchWorkspace,
     setVisibleWorkspaceHostIds,
+    setWorkspaceActivityWindow,
     filterState
   ])
 

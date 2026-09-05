@@ -2,10 +2,12 @@ import { useMemo } from 'react'
 import { useAppStore } from '@/store'
 import { getAgentStatusEpochNow } from '@/lib/agent-status-epoch-clock'
 import { getWorktreeIdsWithLiveAgent } from '@/lib/worktree-activity-state'
+import { useLocalDayStart } from '@/lib/use-local-day-start'
 import type { Repo } from '../../../../../../shared/repo-types'
 import type { WorktreeLineage } from '../../../../../../shared/worktree/lineage-types'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host'
 import { computeVisibleWorktrees } from '../../visible-worktrees'
+import { getActiveSidebarWorkspaceId } from '../../../../../../shared/workspace-scope'
 import {
   EMPTY_PAIRED_DEVICE_IDS_BY_ENVIRONMENT,
   getPairedDeviceIdsByEnvironment
@@ -44,9 +46,14 @@ export function useVisibleSidebarWorktrees(args: {
     hideWorkspacesFromOtherDevices,
     alwaysShowDefaultBranchWorkspace,
     visibleWorkspaceHostIds,
-    workspaceHostScope
+    workspaceHostScope,
+    workspaceActivityWindow
   } = filterState
   const worktreesByRepo = useAppStore((s) => s.worktreesByRepo)
+  const activeSidebarWorkspaceId = useAppStore((s) =>
+    getActiveSidebarWorkspaceId(s.activeWorkspaceKey, s.activeWorktreeId)
+  )
+  const dayStartAt = useLocalDayStart()
   const agentStatusEpoch = useAppStore((s) => (!showSleepingWorkspaces ? s.agentStatusEpoch : 0))
   // Why: skip the clock entirely when the epoch is the opt-out sentinel, so a
   // sleeping-workspaces list cannot evict the sample the live lists share.
@@ -94,6 +101,9 @@ export function useVisibleSidebarWorktrees(args: {
       hideCliCreatedWorkspaces,
       hideDetachedHeadWorkspaces,
       hideWorkspacesFromOtherDevices,
+      workspaceActivityWindow,
+      activityWindowNow: dayStartAt,
+      activeWorktreeId: activeSidebarWorkspaceId,
       pairedDeviceIdsByEnvironment,
       alwaysShowDefaultBranchWorkspace,
       repoMap,
@@ -116,6 +126,9 @@ export function useVisibleSidebarWorktrees(args: {
     hideCliCreatedWorkspaces,
     hideDetachedHeadWorkspaces,
     hideWorkspacesFromOtherDevices,
+    workspaceActivityWindow,
+    activeSidebarWorkspaceId,
+    dayStartAt,
     alwaysShowDefaultBranchWorkspace,
     workspaceHostScope,
     visibleWorkspaceHostIds,

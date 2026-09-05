@@ -10,6 +10,7 @@ import {
 import { useAppStore } from '@/store'
 import { translate } from '@/i18n/i18n'
 import { FilterToggleRow } from './FilterToggleRow'
+import { WorkspaceActivityWindowFilterRow } from './WorkspaceActivityWindowFilterRow'
 
 const SidebarWorkspaceFilterSection = React.memo(function SidebarWorkspaceFilterSection() {
   const showSleepingWorkspaces = useAppStore((s) => s.showSleepingWorkspaces)
@@ -122,6 +123,7 @@ const SidebarWorkspaceFilterSection = React.memo(function SidebarWorkspaceFilter
         checked={hideDetachedHeadWorkspaces}
         onChange={setHideDetachedHeadWorkspaces}
       />
+      <WorkspaceActivityWindowFilterRow />
     </>
   )
 })

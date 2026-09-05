@@ -28,6 +28,8 @@ import {
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import RepoBadgeLabel from '@/components/repo/RepoBadgeLabel'
 import { FilterToggleRow } from './FilterToggleRow'
+import { WorkspaceActivityWindowFilterRow } from './WorkspaceActivityWindowFilterRow'
+import { DEFAULT_WORKSPACE_ACTIVITY_WINDOW } from '../../../../shared/workspace-activity-window'
 import { useShortcutLabel } from '@/hooks/useShortcutLabel'
 import { searchRepos } from '@/lib/repo-search'
 import { DEFAULT_SHOW_SLEEPING_WORKSPACES } from '../../../../shared/constants'
@@ -61,6 +63,8 @@ const SidebarFilter = React.memo(function SidebarFilter({
   const hideCliCreatedWorkspaces = useAppStore((s) => s.hideCliCreatedWorkspaces)
   const setHideCliCreatedWorkspaces = useAppStore((s) => s.setHideCliCreatedWorkspaces)
   const hideDetachedHeadWorkspaces = useAppStore((s) => s.hideDetachedHeadWorkspaces)
+  const workspaceActivityWindow = useAppStore((s) => s.workspaceActivityWindow)
+  const setWorkspaceActivityWindow = useAppStore((s) => s.setWorkspaceActivityWindow)
   const setHideDetachedHeadWorkspaces = useAppStore((s) => s.setHideDetachedHeadWorkspaces)
   const alwaysShowDefaultBranchWorkspace = useAppStore((s) => s.alwaysShowDefaultBranchWorkspace)
   const setAlwaysShowDefaultBranchWorkspace = useAppStore(
@@ -118,8 +122,10 @@ const SidebarFilter = React.memo(function SidebarFilter({
     showSleepingWorkspaces,
     alwaysShowDefaultBranchWorkspace
   )
+  const hasActivityWindowFilter = workspaceActivityWindow !== DEFAULT_WORKSPACE_ACTIVITY_WINDOW
   const hasAnyFilter =
     hasSleepingFilter ||
+    hasActivityWindowFilter ||
     hideDefaultBranchWorkspace ||
     hideAutomationGeneratedWorkspaces ||
     hideCliCreatedWorkspaces ||
@@ -133,6 +139,7 @@ const SidebarFilter = React.memo(function SidebarFilter({
     (hideCliCreatedWorkspaces ? 1 : 0) +
     (hideDetachedHeadWorkspaces ? 1 : 0) +
     (hasSleepingExemptionFilter ? 1 : 0) +
+    (hasActivityWindowFilter ? 1 : 0) +
     selectedCount
 
   const filteredRepos = useMemo(() => searchRepos(repos, query), [repos, query])
@@ -149,6 +156,7 @@ const SidebarFilter = React.memo(function SidebarFilter({
     setHideCliCreatedWorkspaces(false)
     setHideDetachedHeadWorkspaces(false)
     setAlwaysShowDefaultBranchWorkspace(true)
+    setWorkspaceActivityWindow(DEFAULT_WORKSPACE_ACTIVITY_WINDOW)
     setFilterRepoIds([])
   }, [
     setShowSleepingWorkspaces,
@@ -157,6 +165,7 @@ const SidebarFilter = React.memo(function SidebarFilter({
     setHideCliCreatedWorkspaces,
     setHideDetachedHeadWorkspaces,
     setAlwaysShowDefaultBranchWorkspace,
+    setWorkspaceActivityWindow,
     setFilterRepoIds
   ])
 
@@ -277,6 +286,7 @@ const SidebarFilter = React.memo(function SidebarFilter({
           checked={hideDetachedHeadWorkspaces}
           onChange={setHideDetachedHeadWorkspaces}
         />
+        <WorkspaceActivityWindowFilterRow />
 
         {canFilterRepos && (
           <>
