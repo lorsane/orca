@@ -16,6 +16,7 @@ import {
 import { useShortcutLabel } from '../hooks/useShortcutLabel'
 import { useAppStore } from '../store'
 import { hasCustomTitleBar, isMac } from './app-window-chrome'
+import { FORK_PRODUCT_NAME } from '../../../shared/fork-identity'
 import type { AppChromeLayout } from './use-app-chrome-layout'
 
 /**
@@ -69,13 +70,10 @@ export function TitlebarLeftControls({ layout }: { layout: AppChromeLayout }): R
         {layout.showSidebar && !hasCustomTitleBar && layout.showTitlebarAppName && (
           <ContextMenu>
             <ContextMenuTrigger asChild>
-              <div
-                className="titlebar-app-name"
-                aria-label={translate('auto.App.5096cbbc86', 'Orca')}
-              >
-                <span className="titlebar-app-name-main">
-                  {translate('auto.App.5096cbbc86', 'Orca')}
-                </span>
+              {/* Why not translate(): the app name is a proper noun, and this
+                  build must say which install is on screen in every locale. */}
+              <div className="titlebar-app-name" aria-label={FORK_PRODUCT_NAME}>
+                <span className="titlebar-app-name-main">{FORK_PRODUCT_NAME}</span>
               </div>
             </ContextMenuTrigger>
             <ContextMenuContent>
