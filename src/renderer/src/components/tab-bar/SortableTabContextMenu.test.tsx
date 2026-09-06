@@ -59,6 +59,7 @@ vi.mock('lucide-react', () => ({
   ListX: () => null,
   MessageSquare: () => null,
   PanelBottomClose: () => null,
+  PanelLeft: () => null,
   PanelLeftClose: () => null,
   PanelRightClose: () => null,
   Pencil: () => null,

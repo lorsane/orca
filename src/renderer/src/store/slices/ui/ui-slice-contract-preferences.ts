@@ -80,6 +80,8 @@ export type UISlicePreferences = {
   setTabBoardStatus: (tabId: string, status: string | null) => void
   boardExpandsWorkspaceTabs: boolean
   setBoardExpandsWorkspaceTabs: (v: boolean) => void
+  sidebarPinnedTabIds: string[]
+  setTabSidebarPinned: (tabId: string, pinned: boolean) => void
   unhideAllSidebarRows: () => void
   alwaysShowDefaultBranchWorkspace: boolean
   setAlwaysShowDefaultBranchWorkspace: (v: boolean) => void

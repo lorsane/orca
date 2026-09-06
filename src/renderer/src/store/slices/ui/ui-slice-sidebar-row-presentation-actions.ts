@@ -28,6 +28,8 @@ export function createSidebarRowPresentationActions(
   | 'setTabBoardStatus'
   | 'boardExpandsWorkspaceTabs'
   | 'setBoardExpandsWorkspaceTabs'
+  | 'sidebarPinnedTabIds'
+  | 'setTabSidebarPinned'
 > {
   return {
     workspaceActivityWindow: DEFAULT_WORKSPACE_ACTIVITY_WINDOW,
@@ -82,6 +84,12 @@ export function createSidebarRowPresentationActions(
       }),
     boardExpandsWorkspaceTabs: true,
     setBoardExpandsWorkspaceTabs: (v) => set({ boardExpandsWorkspaceTabs: v }),
+    sidebarPinnedTabIds: [],
+    setTabSidebarPinned: (tabId, pinned) =>
+      set((s) => {
+        const next = toggleHiddenRowId(s.sidebarPinnedTabIds, tabId, pinned)
+        return next === s.sidebarPinnedTabIds ? s : { sidebarPinnedTabIds: next }
+      }),
     unhideAllSidebarRows: () =>
       set({
         hiddenWorkspaceIdentities: [],

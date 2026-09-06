@@ -35,6 +35,7 @@ export type PersistedUIWriteBaseline = {
   boardIncludedWorkspaceIdentities: string[]
   tabBoardStatusByTabId: Record<string, string>
   boardExpandsWorkspaceTabs: boolean
+  sidebarPinnedTabIds: string[]
   alwaysShowDefaultBranchWorkspace: boolean
   showDotfilesByWorktree: Record<string, boolean>
   filterRepoIds: readonly string[]
@@ -73,6 +74,7 @@ const PERSISTED_UI_WRITE_BASELINE_FIELD_SET = {
   boardIncludedWorkspaceIdentities: true,
   tabBoardStatusByTabId: true,
   boardExpandsWorkspaceTabs: true,
+  sidebarPinnedTabIds: true,
   alwaysShowDefaultBranchWorkspace: true,
   showDotfilesByWorktree: true,
   filterRepoIds: true,
@@ -120,7 +122,8 @@ function writeFieldEqual(field: keyof PersistedUIWriteBaseline, a: unknown, b: u
     field === 'hiddenWorkspaceIdentities' ||
     field === 'hiddenSidebarProjectIds' ||
     field === 'boardExcludedWorkspaceIdentities' ||
-    field === 'boardIncludedWorkspaceIdentities'
+    field === 'boardIncludedWorkspaceIdentities' ||
+    field === 'sidebarPinnedTabIds'
   ) {
     return stringArrayEqual(a as readonly string[], b as readonly string[])
   }

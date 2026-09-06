@@ -89,6 +89,8 @@ export type PersistedUIState = {
   tabBoardStatusByTabId?: Record<string, string>
   /** Expand a multi-tab workspace into one board card per tab. Absent means on. */
   boardExpandsWorkspaceTabs?: boolean
+  /** Tabs pinned to the sidebar's Pinned section, by unified tab id. */
+  sidebarPinnedTabIds?: string[]
   /** Keep each project's main workspace out of the "Hide sleeping" sweep. Absent means on (#8873). */
   alwaysShowDefaultBranchWorkspace?: boolean
   /** Per-worktree Explorer dotfile visibility. Missing entries inherit the default: show. */

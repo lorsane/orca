@@ -74,7 +74,9 @@ export function buildRows(
   /** Split the Pinned section into one lane per board status. */
   groupPinnedByStatus = false,
   /** Drop project rows left with nothing under them by an active filter. */
-  hideEmptyProjectSections = false
+  hideEmptyProjectSections = false,
+  /** Tabs the user pinned to the sidebar, already projected into card shape. */
+  pinnedTabCards: readonly Worktree[] = []
 ): Row[] {
   const result: Row[] = []
   const projectIndex = buildProjectGroupingIndex(projectGrouping)
@@ -101,9 +103,14 @@ export function buildRows(
     }
   }
 
-  const pinnedSectionWorktrees = nestLineage
-    ? getPinnedSectionWorktrees(worktrees, lineageById, worktreeMap)
-    : worktrees.filter((worktree) => worktree.isPinned)
+  // Why appended rather than merged: a pinned tab belongs to a workspace that
+  // may itself be pinned, and the lineage walk above only knows worktrees.
+  const pinnedSectionWorktrees = [
+    ...(nestLineage
+      ? getPinnedSectionWorktrees(worktrees, lineageById, worktreeMap)
+      : worktrees.filter((worktree) => worktree.isPinned)),
+    ...pinnedTabCards
+  ]
   const pinnedSectionIds = new Set(pinnedSectionWorktrees.map(getWorktreeHostIdentity))
   // Why folder workspaces get their own pinned list: they carry isPinned and the
   // context menu offers Pin, but they never reach emitPinnedGroup's worktree

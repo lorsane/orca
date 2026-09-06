@@ -77,3 +77,38 @@ export function expandWorkspaceBoardTabCards(args: {
   }
   return cards
 }
+
+/**
+ * Cards for the tabs the user pinned to the sidebar.
+ *
+ * Deliberately separate from `Tab.isPinned`, which means "survives close
+ * others" in the tab bar. A tab can be pinned there without belonging in the
+ * sidebar, and pinning it here must not change what closing a tab does.
+ *
+ * Iterates the workspaces rather than the pinned list so the rows keep tab
+ * order, and so a pinned id whose tab is gone simply drops out.
+ */
+export function buildSidebarPinnedTabCards(args: {
+  pinnedTabIds: readonly string[]
+  tabsByWorkspaceId: Readonly<Record<string, readonly Tab[]>>
+  ownerByWorkspaceId: ReadonlyMap<string, Worktree>
+  tabStatusByTabId: Readonly<Record<string, WorkspaceStatus>>
+}): Worktree[] {
+  if (args.pinnedTabIds.length === 0) {
+    return []
+  }
+  const pinned = new Set(args.pinnedTabIds)
+  const cards: Worktree[] = []
+  for (const [workspaceId, tabs] of Object.entries(args.tabsByWorkspaceId)) {
+    const owner = args.ownerByWorkspaceId.get(workspaceId)
+    if (!owner) {
+      continue
+    }
+    for (const tab of [...(tabs ?? [])].sort((a, b) => a.sortOrder - b.sortOrder)) {
+      if (pinned.has(tab.id)) {
+        cards.push(buildTabBoardCard(owner, tab, args.tabStatusByTabId[tab.id]))
+      }
+    }
+  }
+  return cards
+}

@@ -169,6 +169,7 @@ export function usePersistedUIWriter(): void {
       boardIncludedWorkspaceIdentities: s.boardIncludedWorkspaceIdentities,
       tabBoardStatusByTabId: s.tabBoardStatusByTabId,
       boardExpandsWorkspaceTabs: s.boardExpandsWorkspaceTabs,
+      sidebarPinnedTabIds: s.sidebarPinnedTabIds,
       alwaysShowDefaultBranchWorkspace: s.alwaysShowDefaultBranchWorkspace,
       showDotfilesByWorktree: s.showDotfilesByWorktree,
       filterRepoIds: s.filterRepoIds,

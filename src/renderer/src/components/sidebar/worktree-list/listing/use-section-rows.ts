@@ -12,6 +12,9 @@ import type { ExecutionHostId } from '../../../../../../shared/execution-host'
 import { folderWorkspaceKey } from '../../../../../../shared/workspace-scope'
 import { getHostDisplayLabelOverrides } from '../../../../../../shared/host-setting-overrides'
 import { buildRows } from '../grouping/build-rows'
+import { buildSidebarPinnedTabCards } from '../../../../../../shared/workspace-board-tab-cards'
+import type { Tab } from '../../../../../../shared/tab-types'
+import { folderWorkspaceToWorktree } from '../../../../../../shared/folder-workspace-worktree'
 import type { ProjectGroupingModel } from '../grouping/project-grouping'
 import type { PinnedWorktreeDisplayPolicy, Row, WorktreeGroupBy } from '../grouping/row-types'
 import { getLogicalRepoOrderRankById } from '../../project-header-drop'
@@ -20,6 +23,11 @@ import { addHostSectionRows } from '../../host-section-rows'
 import { orderHostSectionOptions } from '../../host-section-order'
 import { buildSidebarHostOptions } from '../../sidebar-host-options'
 import { selectPendingWorktreeCreationKeys } from './pending-worktree-creation-keys'
+
+const EMPTY_PINNED_TAB_CARDS: readonly Worktree[] = []
+const EMPTY_PINNED_TAB_IDS: string[] = []
+const EMPTY_TABS_BY_WORKSPACE: Record<string, Tab[]> = {}
+const EMPTY_TAB_STATUSES: Record<string, string> = {}
 
 type SectionRowsArgs = {
   groupBy: WorktreeGroupBy
@@ -80,6 +88,13 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
   const hideEmptyProjectSections = useAppStore(
     (s) => (s.workspaceActivityWindow ?? 'all') !== 'all'
   )
+  // Why defaulted: this hook renders under mocked and pre-hydration stores too,
+  // and an absent slice must not crash the whole sidebar.
+  const sidebarPinnedTabIds = useAppStore((s) => s.sidebarPinnedTabIds ?? EMPTY_PINNED_TAB_IDS)
+  const unifiedTabsByWorktree = useAppStore(
+    (s) => s.unifiedTabsByWorktree ?? EMPTY_TABS_BY_WORKSPACE
+  )
+  const tabBoardStatusByTabId = useAppStore((s) => s.tabBoardStatusByTabId ?? EMPTY_TAB_STATUSES)
   const runtimeStatusByEnvironmentId = useAppStore((s) => s.runtimeStatusByEnvironmentId)
   const workspaceHostOrder = useAppStore((s) => s.workspaceHostOrder)
   const setWorkspaceHostOrder = useAppStore((s) => s.setWorkspaceHostOrder)
@@ -90,6 +105,31 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
     [repos]
   )
   const allRepoIds = useMemo(() => repos.map((r) => r.id), [repos])
+  const pinnedTabCards = useMemo(() => {
+    if (sidebarPinnedTabIds.length === 0) {
+      return EMPTY_PINNED_TAB_CARDS
+    }
+    const ownerByWorkspaceId = new Map<string, Worktree>(
+      args.worktrees.map((worktree) => [worktree.id, worktree])
+    )
+    for (const folderWorkspace of args.visibleFolderWorkspacesForRows) {
+      const card = folderWorkspaceToWorktree(folderWorkspace)
+      ownerByWorkspaceId.set(card.id, card)
+    }
+    return buildSidebarPinnedTabCards({
+      pinnedTabIds: sidebarPinnedTabIds,
+      tabsByWorkspaceId: unifiedTabsByWorktree,
+      ownerByWorkspaceId,
+      tabStatusByTabId: tabBoardStatusByTabId
+    })
+  }, [
+    args.visibleFolderWorkspacesForRows,
+    args.worktrees,
+    sidebarPinnedTabIds,
+    tabBoardStatusByTabId,
+    unifiedTabsByWorktree
+  ])
+
   const placeholderRepoIds = useMemo(
     () =>
       getEmptyProjectPlaceholderRepoIds({
@@ -181,7 +221,8 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
         defaultHostId,
         args.pinnedDisplayPolicy,
         pinnedSectionGroupByStatus,
-        hideEmptyProjectSections
+        hideEmptyProjectSections,
+        pinnedTabCards
       ),
     [
       args.groupBy,
@@ -206,7 +247,8 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
       hostLabelById,
       args.pinnedDisplayPolicy,
       pinnedSectionGroupByStatus,
-      hideEmptyProjectSections
+      hideEmptyProjectSections,
+      pinnedTabCards
     ]
   )
   const orderedHostOptions = useMemo(

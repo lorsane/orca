@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Tab } from './tab-types'
 import type { Worktree } from './worktree/types'
 import {
+  buildSidebarPinnedTabCards,
   expandWorkspaceBoardTabCards,
   getTabBoardCardLabel,
   parseTabBoardCardId,
@@ -114,5 +115,57 @@ describe('expandWorkspaceBoardTabCards', () => {
       tabStatusByTabId: {}
     })
     expect(card?.lastActivityAt).toBe(9_000)
+  })
+})
+
+describe('buildSidebarPinnedTabCards', () => {
+  const workspace = makeWorktree()
+  const owners = new Map([[workspace.id, workspace]])
+
+  it('returns nothing when no tab is pinned', () => {
+    expect(
+      buildSidebarPinnedTabCards({
+        pinnedTabIds: [],
+        tabsByWorkspaceId: { [workspace.id]: [makeTab()] },
+        ownerByWorkspaceId: owners,
+        tabStatusByTabId: {}
+      })
+    ).toEqual([])
+  })
+
+  it('keeps tab order and carries the tab own board status', () => {
+    const cards = buildSidebarPinnedTabCards({
+      pinnedTabIds: ['tab-2', 'tab-1'],
+      tabsByWorkspaceId: {
+        [workspace.id]: [
+          makeTab({ id: 'tab-2', sortOrder: 2, label: 'Second' }),
+          makeTab({ id: 'tab-1', sortOrder: 1, label: 'First' }),
+          makeTab({ id: 'tab-3', sortOrder: 3, label: 'Unpinned' })
+        ]
+      },
+      ownerByWorkspaceId: owners,
+      tabStatusByTabId: { 'tab-2': 'done' }
+    })
+    expect(cards.map((card) => card.displayName)).toEqual(['First', 'Second'])
+    expect(cards.map((card) => card.workspaceStatus)).toEqual(['todo', 'done'])
+  })
+
+  it('drops a pinned id whose tab or owner is gone', () => {
+    expect(
+      buildSidebarPinnedTabCards({
+        pinnedTabIds: ['ghost'],
+        tabsByWorkspaceId: { [workspace.id]: [makeTab()] },
+        ownerByWorkspaceId: owners,
+        tabStatusByTabId: {}
+      })
+    ).toEqual([])
+    expect(
+      buildSidebarPinnedTabCards({
+        pinnedTabIds: ['tab-1'],
+        tabsByWorkspaceId: { 'other-workspace': [makeTab()] },
+        ownerByWorkspaceId: owners,
+        tabStatusByTabId: {}
+      })
+    ).toEqual([])
   })
 })

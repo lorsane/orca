@@ -17,6 +17,7 @@ export type WorkspaceRowPresentationState = Pick<
   | 'boardIncludedWorkspaceIdentities'
   | 'tabBoardStatusByTabId'
   | 'boardExpandsWorkspaceTabs'
+  | 'sidebarPinnedTabIds'
 >
 
 export function createDefaultWorkspaceRowPresentationState(): WorkspaceRowPresentationState {
@@ -29,7 +30,8 @@ export function createDefaultWorkspaceRowPresentationState(): WorkspaceRowPresen
     boardExcludedWorkspaceIdentities: [],
     boardIncludedWorkspaceIdentities: [],
     tabBoardStatusByTabId: {},
-    boardExpandsWorkspaceTabs: true
+    boardExpandsWorkspaceTabs: true,
+    sidebarPinnedTabIds: []
   }
 }
 
@@ -46,6 +48,7 @@ export function hydrateWorkspaceRowPresentationState(
     boardExcludedWorkspaceIdentities: [...(ui.boardExcludedWorkspaceIdentities ?? [])],
     boardIncludedWorkspaceIdentities: [...(ui.boardIncludedWorkspaceIdentities ?? [])],
     tabBoardStatusByTabId: { ...ui.tabBoardStatusByTabId },
-    boardExpandsWorkspaceTabs: ui.boardExpandsWorkspaceTabs !== false
+    boardExpandsWorkspaceTabs: ui.boardExpandsWorkspaceTabs !== false,
+    sidebarPinnedTabIds: [...(ui.sidebarPinnedTabIds ?? [])]
   }
 }

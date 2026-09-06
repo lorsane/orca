@@ -34,6 +34,7 @@ function makeBaseline(overrides: Partial<PersistedUIWriteBaseline> = {}): Persis
     boardIncludedWorkspaceIdentities: [],
     tabBoardStatusByTabId: {},
     boardExpandsWorkspaceTabs: true,
+    sidebarPinnedTabIds: [],
     alwaysShowDefaultBranchWorkspace: true,
     showDotfilesByWorktree: {},
     filterRepoIds: [],
