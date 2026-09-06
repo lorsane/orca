@@ -562,3 +562,85 @@ describe('buildRows with empty project groups', () => {
     expect(rows.some((row) => row.type === 'header' && row.label === 'empty')).toBe(false)
   })
 })
+
+describe('buildRows with pinned folder workspaces', () => {
+  const group = {
+    id: 'group-1',
+    name: 'monorepo',
+    parentPath: '/tmp/monorepo',
+    parentGroupId: null,
+    createdFrom: 'folder-scan' as const,
+    tabOrder: 0,
+    isCollapsed: false,
+    color: null,
+    createdAt: 0,
+    updatedAt: 0
+  }
+  const folderWorkspace = {
+    id: 'fw-1',
+    projectGroupId: 'group-1',
+    name: 'research',
+    folderPath: '/tmp/monorepo/research',
+    linkedTask: null,
+    comment: '',
+    isArchived: false,
+    isUnread: false,
+    isPinned: true,
+    sortOrder: 0,
+    workspaceStatus: 'todo',
+    lastActivityAt: 0,
+    createdAt: 0,
+    updatedAt: 0
+  }
+
+  const build = (statuses?: { id: string; label: string }[], groupPinnedByStatus = false) =>
+    buildRows(
+      'repo',
+      [],
+      repoMap,
+      null,
+      new Set(),
+      undefined,
+      statuses,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      [group],
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      [folderWorkspace],
+      undefined,
+      undefined,
+      undefined,
+      groupPinnedByStatus
+    )
+
+  it('puts a pinned folder workspace in the Pinned section', () => {
+    const rows = build()
+    expect(rows[0]).toMatchObject({ type: 'header', key: 'pinned', count: 1 })
+    expect(rows[1]).toMatchObject({ type: 'folder-workspace', folderWorkspace: { id: 'fw-1' } })
+  })
+
+  it('renders it once — the pinned copy replaces the one in its project group', () => {
+    const folderRows = build().filter((row) => row.type === 'folder-workspace')
+    expect(folderRows).toHaveLength(1)
+  })
+
+  it('lands it in its own status lane when Pinned is split by status', () => {
+    const rows = build(
+      [
+        { id: 'todo', label: 'Todo' },
+        { id: 'done', label: 'Done' }
+      ],
+      true
+    )
+    expect(rows[0]).toMatchObject({ type: 'header', key: 'pinned:todo', label: 'Todo', count: 1 })
+    expect(rows[1]).toMatchObject({ type: 'folder-workspace', folderWorkspace: { id: 'fw-1' } })
+    expect(rows.some((row) => row.type === 'header' && row.key === 'pinned:done')).toBe(false)
+  })
+})

@@ -6,7 +6,15 @@ import type { ExecutionHostId } from '../../../../../../shared/execution-host'
 import type React from 'react'
 import { getWorkspaceStatus, getWorkspaceStatusVisualMeta } from '../../workspace-status'
 import { PINNED_GROUP_KEY, PINNED_GROUP_META, getPinnedStatusGroupKey } from './group-keys'
-import { appendWorktreeRows, buildImportedWorktreesCardRow } from './row-builders'
+import {
+  appendWorktreeRows,
+  buildFolderWorkspaceRow,
+  buildImportedWorktreesCardRow
+} from './row-builders'
+import {
+  compareFolderWorkspacesForDisplay,
+  type RenderableFolderWorkspace
+} from './folder-workspace-lanes'
 import type { NoticeHostContext } from './host-labels'
 import type { ImportedWorktreesCardCandidate, Row } from './row-types'
 
@@ -31,24 +39,32 @@ export function emitPinnedGroup(
   cyclicLineageIds: ReadonlySet<string>,
   noticeHostContextLabelByRepoId?: ReadonlyMap<string, NoticeHostContext>,
   workspaceStatuses: readonly WorkspaceStatusDefinition[] = [],
-  groupPinnedByStatus = false
+  groupPinnedByStatus = false,
+  pinnedFolderWorkspaces: readonly RenderableFolderWorkspace[] = []
 ): void {
-  if (pinnedSectionWorktrees.length === 0) {
+  if (pinnedSectionWorktrees.length === 0 && pinnedFolderWorkspaces.length === 0) {
     return
   }
   const pinnedRepoOrder = getPinnedRepoOrder(pinnedSectionWorktrees)
   const firstItemIndex = result.length
   const lanes =
     groupPinnedByStatus && workspaceStatuses.length > 0
-      ? buildPinnedStatusLanes(pinnedSectionWorktrees, workspaceStatuses)
-      : [{ key: PINNED_GROUP_KEY, meta: PINNED_GROUP_META, worktrees: pinnedSectionWorktrees }]
+      ? buildPinnedStatusLanes(pinnedSectionWorktrees, pinnedFolderWorkspaces, workspaceStatuses)
+      : [
+          {
+            key: PINNED_GROUP_KEY,
+            meta: PINNED_GROUP_META,
+            worktrees: pinnedSectionWorktrees,
+            folderWorkspaces: [...pinnedFolderWorkspaces]
+          }
+        ]
 
   for (const lane of lanes) {
     result.push({
       type: 'header',
       key: lane.key,
       label: lane.meta.label,
-      count: lane.worktrees.length,
+      count: lane.worktrees.length + lane.folderWorkspaces.length,
       tone: lane.meta.tone,
       icon: lane.meta.icon,
       ...getPinnedHostFacts(lane.worktrees, repoMap, defaultHostId),
@@ -56,6 +72,13 @@ export function emitPinnedGroup(
     })
     if (collapsedGroups.has(lane.key)) {
       continue
+    }
+    // Why folder workspaces first: mirrors how a project group orders its own
+    // rows, so the pinned lane does not invent a second convention.
+    for (const pair of [...lane.folderWorkspaces].sort((left, right) =>
+      compareFolderWorkspacesForDisplay(left.folderWorkspace, right.folderWorkspace)
+    )) {
+      result.push(buildFolderWorkspaceRow(pair, 0))
     }
     // Item rows keep the single pinned section key: drag, reveal and the
     // "natural row" bookkeeping all scope on it, and a lane is presentation.
@@ -115,31 +138,42 @@ type PinnedLane = {
   key: string
   meta: { label: string; tone: string; icon?: React.ComponentType<{ className?: string }> }
   worktrees: Worktree[]
+  folderWorkspaces: RenderableFolderWorkspace[]
 }
 
 /** One lane per status that actually holds a pinned row, in board order. */
 function buildPinnedStatusLanes(
   pinnedSectionWorktrees: readonly Worktree[],
+  pinnedFolderWorkspaces: readonly RenderableFolderWorkspace[],
   workspaceStatuses: readonly WorkspaceStatusDefinition[]
 ): PinnedLane[] {
-  const byStatus = new Map<string, Worktree[]>()
+  const worktreesByStatus = new Map<string, Worktree[]>()
   for (const worktree of pinnedSectionWorktrees) {
     const status = getWorkspaceStatus(worktree, workspaceStatuses)
-    const bucket = byStatus.get(status) ?? []
+    const bucket = worktreesByStatus.get(status) ?? []
     bucket.push(worktree)
-    byStatus.set(status, bucket)
+    worktreesByStatus.set(status, bucket)
+  }
+  const foldersByStatus = new Map<string, RenderableFolderWorkspace[]>()
+  for (const pair of pinnedFolderWorkspaces) {
+    const status = getWorkspaceStatus(pair.folderWorkspace, workspaceStatuses)
+    const bucket = foldersByStatus.get(status) ?? []
+    bucket.push(pair)
+    foldersByStatus.set(status, bucket)
   }
   const lanes: PinnedLane[] = []
   for (const status of workspaceStatuses) {
-    const worktrees = byStatus.get(status.id)
-    if (!worktrees || worktrees.length === 0) {
+    const worktrees = worktreesByStatus.get(status.id) ?? []
+    const folderWorkspaces = foldersByStatus.get(status.id) ?? []
+    if (worktrees.length === 0 && folderWorkspaces.length === 0) {
       continue
     }
     const visual = getWorkspaceStatusVisualMeta(status)
     lanes.push({
       key: getPinnedStatusGroupKey(status.id),
       meta: { label: status.label, tone: visual.tone, icon: visual.icon },
-      worktrees
+      worktrees,
+      folderWorkspaces
     })
   }
   return lanes
