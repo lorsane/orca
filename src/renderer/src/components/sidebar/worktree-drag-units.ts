@@ -1,6 +1,7 @@
 import type { WorktreeDragGroup } from './worktree-manual-order'
 import { ALL_GROUP_KEY, PINNED_GROUP_KEY } from './worktree-list/grouping/group-keys'
 import { getNaturalWorktreeIds } from './natural-worktree-ids'
+import { folderWorkspaceKey } from '../../../../shared/workspace-scope'
 
 export type WorktreeDragUnitGroup = WorktreeDragGroup & {
   units: { worktreeId: string; worktreeIds: string[] }[]
@@ -13,7 +14,7 @@ type WorktreeDragUnitRow =
   | { type: 'imported-worktrees-card' }
   | { type: 'new-external-worktrees-inbox' }
   | { type: 'pending-creation' }
-  | { type: 'folder-workspace' }
+  | { type: 'folder-workspace'; folderWorkspace: { id: string } }
 
 export function getWorktreeDragUnitGroups(
   rows: readonly WorktreeDragUnitRow[]
@@ -32,12 +33,20 @@ export function getWorktreeDragUnitGroups(
       })
       continue
     }
+    // Why a unit of its own: a folder workspace has no lineage children, so it
+    // never joins the preceding row's unit the way a nested worktree does.
+    if (row.type === 'folder-workspace') {
+      current?.units.push({
+        worktreeId: folderWorkspaceKey(row.folderWorkspace.id),
+        worktreeIds: [folderWorkspaceKey(row.folderWorkspace.id)]
+      })
+      continue
+    }
     if (
       row.type === 'host-header' ||
       row.type === 'imported-worktrees-card' ||
       row.type === 'new-external-worktrees-inbox' ||
-      row.type === 'pending-creation' ||
-      row.type === 'folder-workspace'
+      row.type === 'pending-creation'
     ) {
       continue
     }

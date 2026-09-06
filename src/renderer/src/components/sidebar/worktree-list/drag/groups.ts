@@ -2,6 +2,7 @@ import { ALL_GROUP_KEY, PINNED_GROUP_KEY } from '../grouping/group-keys'
 import { getNaturalWorktreeIds } from '../../natural-worktree-ids'
 import type { HostSectionRow } from '../../host-section-rows'
 import type { WorktreeDragGroup } from '../../worktree-manual-order'
+import { folderWorkspaceKey } from '../../../../../../shared/workspace-scope'
 
 export function getWorktreeDragGroups(rows: HostSectionRow[]): WorktreeDragGroup[] {
   const groups: WorktreeDragGroup[] = []
@@ -14,12 +15,18 @@ export function getWorktreeDragGroups(rows: HostSectionRow[]): WorktreeDragGroup
       groups.push({ key: current.key, worktreeIds: current.ids })
       continue
     }
+    // Why folder workspaces belong here: without a drag group they have no
+    // source key, and use-pointer-drag refuses to start — which is why a pinned
+    // folder workspace could not be dragged onto the board at all.
+    if (row.type === 'folder-workspace') {
+      current?.ids.push(folderWorkspaceKey(row.folderWorkspace.id))
+      continue
+    }
     if (
       row.type === 'host-header' ||
       row.type === 'imported-worktrees-card' ||
       row.type === 'new-external-worktrees-inbox' ||
-      row.type === 'pending-creation' ||
-      row.type === 'folder-workspace'
+      row.type === 'pending-creation'
     ) {
       continue
     }
@@ -44,9 +51,24 @@ export function getWorktreeDragIndexes(rows: readonly HostSectionRow[]): {
   const groupIndexByRowKey = new Map<string, number>()
   const groupIndexes = new Map<string, number>()
   const naturalWorktreeIds = getNaturalWorktreeIds(rows)
+  // Why tracked: a folder-workspace row carries no sectionKey of its own, so its
+  // group is the section it was emitted under.
+  let currentSectionKey: string | null = null
   for (const row of rows) {
     if (row.type === 'header') {
+      currentSectionKey = row.key
       groupIndexes.set(row.key, 0)
+      continue
+    }
+    if (row.type === 'folder-workspace') {
+      if (!currentSectionKey) {
+        continue
+      }
+      const folderIndex = groupIndexes.get(currentSectionKey) ?? 0
+      const folderRowKey = folderWorkspaceKey(row.folderWorkspace.id)
+      groupKeyByRowKey.set(folderRowKey, currentSectionKey)
+      groupIndexByRowKey.set(folderRowKey, folderIndex)
+      groupIndexes.set(currentSectionKey, folderIndex + 1)
       continue
     }
     if (row.type !== 'item') {
