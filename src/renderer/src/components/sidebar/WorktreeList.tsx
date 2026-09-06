@@ -37,6 +37,7 @@ import { useVisibleSidebarWorktrees } from './worktree-list/listing/use-visible-
 import { useWorktreeStatusMutations } from './worktree-list/drag/use-status-mutations'
 import { shouldFiltersHideAllRows } from './sidebar-empty-state-gate'
 import { buildWorktreeManualOrderCatalog } from './worktree-manual-order-catalog'
+import { buildStatusMutationWorktreeMap } from './status-mutation-worktree-map'
 
 type WorktreeListProps = {
   scrollOffsetRef: React.MutableRefObject<number>
@@ -178,9 +179,20 @@ const WorktreeList = React.memo(function WorktreeList({
     sectionRows: rowModel.sectionRows,
     pinnedDisplayPolicy
   })
+  // Why a widened map: useWorktreeMap is git worktrees only, so every status
+  // mutation addressed by a `folder:` key resolved to nothing and returned
+  // silently — dragging a folder workspace onto a board lane did nothing at all.
+  // Kept separate from worktreeMap, which lineage rendering reads.
+  const statusMutationWorktreeMap = useMemo(
+    () =>
+      folderWorkspaces.length === 0
+        ? worktreeMap
+        : buildStatusMutationWorktreeMap(worktreeMap, folderWorkspaces),
+    [folderWorkspaces, worktreeMap]
+  )
   const statusMutations = useWorktreeStatusMutations({
     manualOrderCatalog,
-    worktreeMap,
+    worktreeMap: statusMutationWorktreeMap,
     workspaceStatuses,
     sortBy
   })
