@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 import { useAppStore } from '@/store'
 import { useAllWorktrees } from '@/store/selectors'
+import { folderWorkspaceToWorktree } from '../../../shared/folder-workspace-worktree'
 import { usePluginCommands } from '@/store/plugin-panels'
 import { useSettingsNavigationMetadata } from '@/hooks/useSettingsNavigationMetadata'
 import {
@@ -29,7 +30,19 @@ export function useWorktreeJumpPaletteStoreState({
   const recordFeatureInteraction = useAppStore((state) => state.recordFeatureInteraction)
   const revealSidebarRow = useAppStore((state) => state.revealSidebarRow)
   const worktreesByRepo = useAppStore((state) => state.worktreesByRepo)
-  const allWorktrees = useAllWorktrees()
+  const gitWorktrees = useAllWorktrees()
+  const folderWorkspaces = useAppStore((state) => state.folderWorkspaces)
+  // Why projected in here: the whole palette pipeline — filters, search, host
+  // resolution, activation — is typed on Worktree and works unchanged on the
+  // projection. useAllWorktrees is git-only, so without this Cmd+J could not
+  // reach a folder workspace at all.
+  const allWorktrees = useMemo(
+    () =>
+      folderWorkspaces.length === 0
+        ? gitWorktrees
+        : [...gitWorktrees, ...folderWorkspaces.map(folderWorkspaceToWorktree)],
+    [folderWorkspaces, gitWorktrees]
+  )
   const repos = useAppStore((state) => state.repos)
   const projectGroups = useAppStore((state) => state.projectGroups)
   const projects = useAppStore((state) => state.projects)
