@@ -43,3 +43,54 @@ describe('folder workspaces in the sidebar drag model', () => {
     expect(groupKeyByRowKey.has('folder:orphan')).toBe(false)
   })
 })
+
+const itemRow = (id: string, sectionKey: string): HostSectionRow =>
+  ({
+    type: 'item',
+    rowKey: `${sectionKey}:${id}`,
+    sectionKey,
+    worktree: { id },
+    repo: undefined,
+    depth: 0,
+    groupDepth: 0,
+    lineageTrail: [],
+    isLastLineageChild: false,
+    lineageChildCount: 0
+  }) as unknown as HostSectionRow
+
+describe('pinned status lanes in the sidebar drag model', () => {
+  // Why: lane headers carry `pinned:<status>` while their rows keep the single
+  // `pinned` sectionKey. Keying the index off sectionKey handed the drag a
+  // source group no group had, so reordering inside Pinned did nothing.
+  it('keys a pinned row by its lane header, matching the drag groups', () => {
+    const rows = [
+      headerRow('pinned:todo'),
+      itemRow('wt-1', 'pinned'),
+      folderRow('fw-1'),
+      headerRow('pinned:done'),
+      itemRow('wt-2', 'pinned')
+    ]
+    const { groupKeyByRowKey } = getWorktreeDragIndexes(rows)
+    const groups = getWorktreeDragGroups(rows)
+
+    expect(groupKeyByRowKey.get('pinned:wt-1')).toBe('pinned:todo')
+    expect(groupKeyByRowKey.get('pinned:wt-2')).toBe('pinned:done')
+    for (const [, key] of groupKeyByRowKey) {
+      expect(groups.some((group) => group.key === key)).toBe(true)
+    }
+  })
+
+  it('shares one index counter between folder and worktree rows in a lane', () => {
+    const { groupIndexByRowKey } = getWorktreeDragIndexes([
+      headerRow('pinned:todo'),
+      itemRow('wt-1', 'pinned'),
+      folderRow('fw-1'),
+      itemRow('wt-2', 'pinned')
+    ])
+    expect([
+      groupIndexByRowKey.get('pinned:wt-1'),
+      groupIndexByRowKey.get('folder:fw-1'),
+      groupIndexByRowKey.get('pinned:wt-2')
+    ]).toEqual([0, 1, 2])
+  })
+})

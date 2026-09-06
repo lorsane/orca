@@ -1,5 +1,6 @@
 import { useMemo, type JSX } from 'react'
 import { useAppStore } from '@/store'
+import { DEFAULT_WORKSPACE_ACTIVITY_WINDOW } from '../../../../shared/workspace-activity-window'
 import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -39,6 +40,10 @@ export function useWorkspaceOptionsFilterBadge(): {
   const filterRepoIds = useAppStore((s) => s.filterRepoIds)
   const repos = useAppStore((s) => s.repos)
   const visibleWorkspaceHostIds = useAppStore((s) => s.visibleWorkspaceHostIds)
+  const workspaceActivityWindow = useAppStore((s) => s.workspaceActivityWindow)
+  const hiddenWorkspaceIdentities = useAppStore((s) => s.hiddenWorkspaceIdentities)
+  const hiddenSidebarProjectIds = useAppStore((s) => s.hiddenSidebarProjectIds)
+  const showHiddenSidebarRows = useAppStore((s) => s.showHiddenSidebarRows)
 
   const selectedCount = useMemo(() => {
     let count = 0
@@ -57,6 +62,14 @@ export function useWorkspaceOptionsFilterBadge(): {
   )
   const hasRepoFilter = selectedCount > 0
   const hasHostVisibilityFilter = visibleWorkspaceHostIds !== null
+  // Why counted here too: both new filters live in this menu's own filter
+  // section, so without them the button shows no badge while rows are hidden.
+  const hasActivityWindowFilter =
+    (workspaceActivityWindow ?? DEFAULT_WORKSPACE_ACTIVITY_WINDOW) !==
+    DEFAULT_WORKSPACE_ACTIVITY_WINDOW
+  const hiddenRowCount = showHiddenSidebarRows
+    ? 0
+    : (hiddenWorkspaceIdentities?.length ?? 0) + (hiddenSidebarProjectIds?.length ?? 0)
   const hasAnyFilter =
     hasSleepingFilter ||
     hideDefaultBranchWorkspace ||
@@ -66,7 +79,9 @@ export function useWorkspaceOptionsFilterBadge(): {
     hideWorkspacesFromOtherDevices ||
     hasSleepingExemptionFilter ||
     hasRepoFilter ||
-    hasHostVisibilityFilter
+    hasHostVisibilityFilter ||
+    hasActivityWindowFilter ||
+    hiddenRowCount > 0
   const activeFilterCount =
     (hasSleepingFilter ? 1 : 0) +
     (hideDefaultBranchWorkspace ? 1 : 0) +
@@ -76,6 +91,8 @@ export function useWorkspaceOptionsFilterBadge(): {
     (hideWorkspacesFromOtherDevices ? 1 : 0) +
     (hasSleepingExemptionFilter ? 1 : 0) +
     (hasHostVisibilityFilter ? 1 : 0) +
+    (hasActivityWindowFilter ? 1 : 0) +
+    hiddenRowCount +
     selectedCount
 
   return {

@@ -20,17 +20,18 @@ function makeWorktree(overrides: Partial<Worktree> = {}): Worktree {
     isMainWorktree: false,
     displayName: 'workspace',
     comment: '',
-    linkedIssue: null,
+    linkedIssue: 7,
     linkedPR: null,
-    linkedLinearIssue: null,
+    linkedLinearIssue: 'ENG-1',
     isArchived: false,
     isUnread: true,
     isPinned: true,
     sortOrder: 5,
     lastActivityAt: 1_000,
     workspaceStatus: 'todo',
+    linkedWorkItem: { provider: 'linear', type: 'issue', linearIdentifier: 'ENG-1' },
     ...overrides
-  }
+  } as Worktree
 }
 
 function makeTab(overrides: Partial<Tab> = {}): Tab {
@@ -101,6 +102,11 @@ describe('expandWorkspaceBoardTabCards', () => {
     // Pin and unread stay workspace-level facts.
     expect(cards.every((card) => !card.isPinned && !card.isUnread)).toBe(true)
     expect(cards.every((card) => card.repoId === workspace.repoId)).toBe(true)
+    // Why: a tab is not the workspace's task. Inherited, moving ONE tab card to
+    // Done drove the board task sync and closed the whole workspace's issue.
+    expect(cards.every((card) => card.linkedWorkItem === null)).toBe(true)
+    expect(cards.every((card) => card.linkedLinearIssue === null)).toBe(true)
+    expect(cards.every((card) => card.linkedIssue === null)).toBe(true)
   })
 
   it('dates a card by its own tab focus, not the workspace', () => {

@@ -50,7 +50,21 @@ export function buildTabBoardCard(
     workspaceStatus: status ?? owner.workspaceStatus,
     // A tab is never independently pinned or unread: those belong to the workspace.
     isPinned: false,
-    isUnread: false
+    isUnread: false,
+    // Why cleared rather than inherited: a tab is not the workspace's task. Left
+    // in place, moving ONE tab card to Done drove the board's task-status sync
+    // and closed the whole workspace's linked issue while its other tabs were
+    // still in progress.
+    linkedWorkItem: null,
+    linkedTaskSourceContext: null,
+    linkedIssue: null,
+    linkedPR: null,
+    linkedLinearIssue: null,
+    linkedGitLabMR: null,
+    linkedGitLabIssue: null,
+    linkedBitbucketPR: null,
+    linkedAzureDevOpsPR: null,
+    linkedGiteaPR: null
   }
 }
 

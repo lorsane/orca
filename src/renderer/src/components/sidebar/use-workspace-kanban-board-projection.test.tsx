@@ -131,4 +131,59 @@ describe('useWorkspaceKanbanBoardProjection', () => {
 
     expect(result.current.boardWorktrees.map((card) => card.id)).toEqual([workspace.id])
   })
+
+  it('indexes both the workspace and its tab cards so a sidebar drop can resolve either', () => {
+    const repo = makeRepo()
+    const workspace = makeWorktree('multi', 'Multi tab', { workspaceStatus: 'todo' })
+    useAppStore.setState({
+      worktreesByRepo: { [repo.id]: [workspace] },
+      showSleepingWorkspaces: true,
+      unifiedTabsByWorktree: {
+        [workspace.id]: [makeTab('tab-a', workspace.id), makeTab('tab-b', workspace.id)]
+      }
+    })
+
+    const { result } = render([workspace], repo)
+
+    // Why the workspace id matters: a sidebar row dragged onto a lane is
+    // addressed by workspace id, and expansion had removed it from the index.
+    expect(result.current.worktreeById.get(workspace.id)?.id).toBe(workspace.id)
+    expect(result.current.worktreeById.get(tabBoardCardId('tab-a'))?.id).toBe(
+      tabBoardCardId('tab-a')
+    )
+  })
+
+  it('marks the active tab card rather than a workspace card that is not rendered', () => {
+    const repo = makeRepo()
+    const workspace = makeWorktree('multi', 'Multi tab', { workspaceStatus: 'todo' })
+    useAppStore.setState({
+      worktreesByRepo: { [repo.id]: [workspace] },
+      showSleepingWorkspaces: true,
+      unifiedTabsByWorktree: {
+        [workspace.id]: [makeTab('tab-a', workspace.id), makeTab('tab-b', workspace.id)]
+      },
+      groupsByWorktree: {
+        [workspace.id]: [
+          { id: 'group-1', worktreeId: workspace.id, activeTabId: 'tab-b', tabOrder: [] }
+        ]
+      },
+      activeGroupIdByWorktree: { [workspace.id]: 'group-1' }
+    })
+
+    const { result } = renderHook(() =>
+      useWorkspaceKanbanBoardProjection({
+        activeWorktreeId: workspace.id,
+        activeWorkspaceExecutionHostId: workspace.hostId ?? null,
+        allWorktrees: [workspace],
+        open: true,
+        repoMap: new Map([[repo.id, repo]]),
+        sortBy: 'manual',
+        workspaceStatuses: statuses
+      })
+    )
+
+    expect(result.current.activeWorktreeIdentity).toBe(
+      getWorktreeHostIdentity({ id: tabBoardCardId('tab-b'), hostId: workspace.hostId })
+    )
+  })
 })

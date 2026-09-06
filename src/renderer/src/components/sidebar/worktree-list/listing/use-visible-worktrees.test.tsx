@@ -226,4 +226,30 @@ describe('useVisibleSidebarWorktrees', () => {
       }).result.current.visibleWorktrees
     ).toEqual([])
   })
+
+  it('keeps an explicitly hidden parent hidden, despite lineage ancestor injection', () => {
+    const repo = makeRepo()
+    const parent = makeWorktree('parent', 'Parent workspace')
+    const child = makeWorktree('child', 'Child workspace')
+    useAppStore.setState({ worktreesByRepo: { [repo.id]: [parent, child] } })
+
+    const { result } = renderHook(() =>
+      useVisibleSidebarWorktrees({
+        filterState: {
+          ...BASE_FILTER_STATE,
+          hiddenWorkspaceIdentities: [getWorktreeHostIdentity(parent)]
+        },
+        sortBy: 'recent',
+        sortedIds: [parent.id, child.id],
+        repoMap: new Map([[repo.id, repo]]),
+        // Why lineage: ancestor injection bypasses the KIND filters so a child
+        // never orphans, and it used to undo an explicit per-row hide too.
+        worktreeLineageById: { [child.id]: { parentWorktreeId: parent.id } as never },
+        defaultHostId: LOCAL_EXECUTION_HOST_ID,
+        agentSendTargetWorktreeId: null
+      })
+    )
+
+    expect(result.current.visibleWorktrees.map((w) => w.id)).toEqual([child.id])
+  })
 })

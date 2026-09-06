@@ -77,10 +77,16 @@ export function getWorktreeDragIndexes(rows: readonly HostSectionRow[]): {
     if (row.sectionKey === PINNED_GROUP_KEY && naturalWorktreeIds.has(row.worktree.id)) {
       continue
     }
-    const index = groupIndexes.get(row.sectionKey) ?? 0
-    groupKeyByRowKey.set(row.rowKey, row.sectionKey)
+    // Why the header key and not row.sectionKey: pinned status lanes give each
+    // lane its own header while their rows keep the one pinned sectionKey, and
+    // getWorktreeDragGroups keys groups by header. Reading sectionKey here left
+    // the drag with a source group that no group had, so reordering inside
+    // Pinned silently did nothing — and split the folder/item index counters.
+    const sectionKey = currentSectionKey ?? row.sectionKey
+    const index = groupIndexes.get(sectionKey) ?? 0
+    groupKeyByRowKey.set(row.rowKey, sectionKey)
     groupIndexByRowKey.set(row.rowKey, index)
-    groupIndexes.set(row.sectionKey, index + 1)
+    groupIndexes.set(sectionKey, index + 1)
   }
   return { groupKeyByRowKey, groupIndexByRowKey }
 }

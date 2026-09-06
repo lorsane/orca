@@ -134,10 +134,11 @@ export function computeVisibleWorktrees(
 
   const hiddenIdentities = opts.hiddenWorkspaceIdentities
   const hiddenProjects = opts.hiddenSidebarProjectIds
+  const isExplicitlyHidden = (worktree: Worktree): boolean =>
+    hiddenIdentities?.has(getWorktreeHostIdentity(worktree)) === true ||
+    hiddenProjects?.has(worktree.repoId) === true
   if (hiddenIdentities?.size || hiddenProjects?.size) {
-    all = all.filter(
-      (w) => !hiddenIdentities?.has(getWorktreeHostIdentity(w)) && !hiddenProjects?.has(w.repoId)
-    )
+    all = all.filter((w) => !isExplicitlyHidden(w))
   }
 
   const activityWindow = opts.workspaceActivityWindow
@@ -209,13 +210,22 @@ export function computeVisibleWorktrees(
 
   return opts.injectLineageAncestors === false
     ? all
-    : addVisibleLineageAncestors(all, lineageAncestorById, opts.worktreeLineageById)
+    : // Why the predicate: ancestor injection deliberately bypasses the KIND
+      // filters so a child never orphans, but an explicit per-row hide is the
+      // user naming that row — it must not be re-added behind their back.
+      addVisibleLineageAncestors(
+        all,
+        lineageAncestorById,
+        opts.worktreeLineageById,
+        isExplicitlyHidden
+      )
 }
 
 function addVisibleLineageAncestors(
   worktrees: Worktree[],
   worktreeById: Map<string, Worktree>,
-  lineageById: Record<string, WorktreeLineage>
+  lineageById: Record<string, WorktreeLineage>,
+  isExplicitlyHidden: (worktree: Worktree) => boolean = () => false
 ): Worktree[] {
   const result: Worktree[] = []
   const included = new Set<string>()
@@ -229,7 +239,7 @@ function addVisibleLineageAncestors(
     }
     visiting.add(identity)
     const lineage = getLineageRenderInfo(worktree, lineageById, worktreeById, cyclicLineageIds)
-    if (lineage.state === 'valid') {
+    if (lineage.state === 'valid' && !isExplicitlyHidden(lineage.parent)) {
       // Why: sidebar lineage is structural. If a filtered child is visible,
       // its valid parent must be rendered too so the hierarchy remains legible.
       addWithAncestors(lineage.parent)

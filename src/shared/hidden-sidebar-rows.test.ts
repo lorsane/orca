@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ProjectGroup } from './project-group-types'
 import {
+  expandHiddenSidebarProjectIds,
   hasHiddenSidebarRows,
   isHiddenProjectGroupId,
   toggleHiddenRowId,
@@ -73,5 +74,38 @@ describe('hasHiddenSidebarRows', () => {
     expect(hasHiddenSidebarRows([], [])).toBe(false)
     expect(hasHiddenSidebarRows(['w'], [])).toBe(true)
     expect(hasHiddenSidebarRows([], ['p'])).toBe(true)
+  })
+})
+
+describe('expandHiddenSidebarProjectIds', () => {
+  const groups = [makeGroup('root', null), makeGroup('child', 'root')]
+  const repos = [
+    { id: 'repo-in-root', projectGroupId: 'root' },
+    { id: 'repo-in-child', projectGroupId: 'child' },
+    { id: 'repo-loose', projectGroupId: null }
+  ]
+
+  it('adds the repos a hidden group contains, including nested ones', () => {
+    // Why it matters: the section emitter re-appends a repo whose group it
+    // cannot find, so hiding a group without its repos flattened it instead.
+    const expanded = expandHiddenSidebarProjectIds({
+      hiddenSidebarProjectIds: ['root'],
+      repos,
+      projectGroups: groups
+    })
+    expect(new Set(expanded)).toEqual(new Set(['root', 'repo-in-root', 'repo-in-child']))
+  })
+
+  it('leaves repos outside the hidden group alone, and short-circuits when nothing is hidden', () => {
+    expect(
+      expandHiddenSidebarProjectIds({ hiddenSidebarProjectIds: [], repos, projectGroups: groups })
+    ).toEqual([])
+    const expanded = expandHiddenSidebarProjectIds({
+      hiddenSidebarProjectIds: ['child'],
+      repos,
+      projectGroups: groups
+    })
+    expect(expanded).not.toContain('repo-in-root')
+    expect(expanded).not.toContain('repo-loose')
   })
 })

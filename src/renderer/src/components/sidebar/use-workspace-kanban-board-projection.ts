@@ -6,7 +6,11 @@ import { buildWorkspaceKanbanLaneViews } from './workspace-kanban-search'
 import { useWorkspaceKanbanSearch } from './use-workspace-kanban-search'
 import { registerWorkspaceKanbanSidebarDropGroups } from './workspace-kanban-sidebar-drop'
 import { buildUnambiguousWorktreeIdIndex } from './worktree-unambiguous-id-index'
-import { expandWorkspaceBoardTabCards } from '../../../../shared/workspace-board-tab-cards'
+import {
+  expandWorkspaceBoardTabCards,
+  parseTabBoardCardId,
+  tabBoardCardId
+} from '../../../../shared/workspace-board-tab-cards'
 import {
   composeWorktreeHostIdentity,
   getWorktreeHostIdentity
@@ -29,6 +33,20 @@ export function useWorkspaceKanbanBoardProjection(args: {
   const tabBoardStatusByTabId = useAppStore((s) => s.tabBoardStatusByTabId)
   const boardExpandsWorkspaceTabs = useAppStore((s) => s.boardExpandsWorkspaceTabs)
   const boardExcluded = useAppStore((s) => s.boardExcludedWorkspaceIdentities)
+  // Mirrors getActiveTab without pulling the whole tabs slice into this memo.
+  const activeTabId = useAppStore((s) => {
+    const workspaceId = args.activeWorktreeId
+    if (!workspaceId) {
+      return null
+    }
+    // Why defaulted: the board renders under mocked stores where these slices
+    // are absent, and an unguarded index throws out of the selector.
+    const groupId = s.activeGroupIdByWorktree?.[workspaceId]
+    return (
+      (s.groupsByWorktree?.[workspaceId] ?? []).find((group) => group.id === groupId)
+        ?.activeTabId ?? null
+    )
+  })
   const boardExcludedSet = useMemo(() => new Set(boardExcluded), [boardExcluded])
   const { visibleWorktreeIds, folderBoardWorktrees } = useVisibleWorkspaceKanbanWorktreeIds({
     allWorktrees: args.allWorktrees,
@@ -87,19 +105,30 @@ export function useWorkspaceKanbanBoardProjection(args: {
   )
   // Why the unfiltered source: a status drop can target a workspace the board
   // is not currently showing, and the index is how the drop resolves its card.
-  const worktreeById = useMemo(
-    () =>
-      buildUnambiguousWorktreeIdIndex(
-        boardExpandsWorkspaceTabs
-          ? expandWorkspaceBoardTabCards({
-              worktrees: boardSourceWorktrees,
-              tabsByWorkspaceId: unifiedTabsByWorktree,
-              tabStatusByTabId: tabBoardStatusByTabId
-            })
-          : boardSourceWorktrees
-      ),
-    [boardExpandsWorkspaceTabs, boardSourceWorktrees, tabBoardStatusByTabId, unifiedTabsByWorktree]
-  )
+  //
+  // Why BOTH the workspaces and their tab cards: expansion replaces a multi-tab
+  // workspace with tab cards, so indexing only the expansion dropped that
+  // workspace's own id — and a sidebar row dragged onto a lane resolved to
+  // nothing at all.
+  const worktreeById = useMemo(() => {
+    // Why only the TAB cards are added: expansion passes a workspace with fewer
+    // than two tabs through unchanged, so concatenating its whole output would
+    // list every such workspace twice — and the index drops duplicate ids as
+    // ambiguous, silently removing the very rows a drop needs to resolve.
+    const tabCards = boardExpandsWorkspaceTabs
+      ? expandWorkspaceBoardTabCards({
+          worktrees: boardSourceWorktrees,
+          tabsByWorkspaceId: unifiedTabsByWorktree,
+          tabStatusByTabId: tabBoardStatusByTabId
+        }).filter((card) => parseTabBoardCardId(card.id) !== null)
+      : []
+    return buildUnambiguousWorktreeIdIndex([...boardSourceWorktrees, ...tabCards])
+  }, [
+    boardExpandsWorkspaceTabs,
+    boardSourceWorktrees,
+    tabBoardStatusByTabId,
+    unifiedTabsByWorktree
+  ])
   const boardWorktrees = useMemo(
     () => args.workspaceStatuses.flatMap((status) => worktreesByStatus.get(status.id) ?? []),
     [args.workspaceStatuses, worktreesByStatus]
@@ -144,12 +173,21 @@ export function useWorkspaceKanbanBoardProjection(args: {
         : boardWorktrees,
     [boardWorktrees, search.matchingWorktreeIds]
   )
-  const activeWorktreeIdentity = args.activeWorktreeId
-    ? composeWorktreeHostIdentity(
-        args.activeWorkspaceExecutionHostId ?? undefined,
-        args.activeWorktreeId
-      )
-    : null
+  // Why resolved against the rendered cards: once a workspace expands into tab
+  // cards its own identity is no longer on the board, so highlighting it marked
+  // nothing at all. Fall back to the workspace when its tab card is not shown.
+  const activeWorktreeIdentity = useMemo(() => {
+    if (!args.activeWorktreeId) {
+      return null
+    }
+    const host = args.activeWorkspaceExecutionHostId ?? undefined
+    const workspaceIdentity = composeWorktreeHostIdentity(host, args.activeWorktreeId)
+    if (!activeTabId) {
+      return workspaceIdentity
+    }
+    const tabIdentity = composeWorktreeHostIdentity(host, tabBoardCardId(activeTabId))
+    return boardCardIdentities.has(tabIdentity) ? tabIdentity : workspaceIdentity
+  }, [activeTabId, args.activeWorkspaceExecutionHostId, args.activeWorktreeId, boardCardIdentities])
   return {
     activeWorktreeIdentity,
     boardDragGroups,

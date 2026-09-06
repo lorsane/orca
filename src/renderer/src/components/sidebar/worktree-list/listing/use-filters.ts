@@ -1,8 +1,13 @@
 import { useCallback, useMemo } from 'react'
 import { useAppStore } from '@/store'
+import type { AppState } from '@/store/types'
 import { DEFAULT_SHOW_SLEEPING_WORKSPACES } from '../../../../../../shared/constants'
 import { computeClearFilterActions, sidebarHasActiveFilters } from '../../visible-worktrees'
 import { DEFAULT_WORKSPACE_ACTIVITY_WINDOW } from '../../../../../../shared/workspace-activity-window'
+import { expandHiddenSidebarProjectIds } from '../../../../../../shared/hidden-sidebar-rows'
+
+const EMPTY_HIDDEN_IDS: string[] = []
+const EMPTY_REPOS: AppState['repos'] = []
 
 export type SidebarWorktreeFilters = ReturnType<typeof useSidebarWorktreeFilters>
 
@@ -19,8 +24,28 @@ export function useSidebarWorktreeFilters() {
   const visibleWorkspaceHostIds = useAppStore((s) => s.visibleWorkspaceHostIds)
   const workspaceHostScope = useAppStore((s) => s.workspaceHostScope)
   const workspaceActivityWindow = useAppStore((s) => s.workspaceActivityWindow)
-  const hiddenWorkspaceIdentities = useAppStore((s) => s.hiddenWorkspaceIdentities)
-  const hiddenSidebarProjectIds = useAppStore((s) => s.hiddenSidebarProjectIds)
+  const hiddenWorkspaceIdentities = useAppStore(
+    (s) => s.hiddenWorkspaceIdentities ?? EMPTY_HIDDEN_IDS
+  )
+  // Why defaulted: these hooks render under mocked and pre-hydration stores,
+  // where an absent slice must not take the sidebar down.
+  const rawHiddenSidebarProjectIds = useAppStore(
+    (s) => s.hiddenSidebarProjectIds ?? EMPTY_HIDDEN_IDS
+  )
+  const repos = useAppStore((s) => s.repos ?? EMPTY_REPOS)
+  const projectGroups = useAppStore((s) => s.projectGroups)
+  // Why expanded here and not per consumer: hiding a project group has to hide
+  // the repos inside it too, and every surface that filters rows needs the same
+  // widened set — the sidebar list, the host scope, and the board.
+  const hiddenSidebarProjectIds = useMemo(
+    () =>
+      expandHiddenSidebarProjectIds({
+        hiddenSidebarProjectIds: rawHiddenSidebarProjectIds,
+        repos,
+        projectGroups: projectGroups ?? []
+      }),
+    [projectGroups, rawHiddenSidebarProjectIds, repos]
+  )
   const showHiddenSidebarRows = useAppStore((s) => s.showHiddenSidebarRows)
 
   const setShowSleepingWorkspaces = useAppStore((s) => s.setShowSleepingWorkspaces)
