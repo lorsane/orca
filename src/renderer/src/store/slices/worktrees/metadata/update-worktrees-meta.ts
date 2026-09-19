@@ -6,6 +6,7 @@ import {
   getFolderWorkspaceMetaUpdates
 } from '../listing/detected-worktree-meta'
 import { parseTabBoardCardId } from '../../../../../../shared/workspace-board-tab-cards'
+import { applyTabBoardCardOwnUpdates } from './tab-board-card-meta-write'
 import { persistWorktreeMeta } from './worktree-meta-persist'
 import { isRuntimeSelectorNotFoundError } from '../listing/runtime-worktree-rpc-errors'
 import { settingsForWorktreeOwner } from '../listing/worktree-owner-settings'
@@ -49,10 +50,7 @@ export function createUpdateWorktreesMeta(
         resolvedUpdates.push(entry)
         continue
       }
-      const { workspaceStatus, ...ownerUpdates } = entry.updates
-      if (workspaceStatus !== undefined) {
-        get().setTabBoardStatus(tabBoardCardTabId, workspaceStatus)
-      }
+      const ownerUpdates = applyTabBoardCardOwnUpdates(get, tabBoardCardTabId, entry.updates)
       const ownerWorktreeId = get().getTab(tabBoardCardTabId)?.worktreeId
       if (ownerWorktreeId && Object.keys(ownerUpdates).length > 0) {
         resolvedUpdates.push({ ...entry, worktreeId: ownerWorktreeId, updates: ownerUpdates })

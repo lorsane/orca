@@ -47,3 +47,23 @@ describe('buildStatusMutationWorktreeMap', () => {
     expect(source.size).toBe(1)
   })
 })
+
+describe('buildStatusMutationWorktreeMap with pinned tab cards', () => {
+  const tabCard = { id: 'tab:tab-1', repoId: 'repo-1', displayName: 'Deploy' } as Worktree
+
+  it('resolves a pinned tab card by its tab id', () => {
+    // Why: a pinned tab is a sidebar row like any other, so dropping it on a
+    // board lane addresses it by `tab:` — which used to resolve to nothing.
+    const map = buildStatusMutationWorktreeMap(new Map(), [], [tabCard])
+    expect(map.get('tab:tab-1')?.displayName).toBe('Deploy')
+  })
+
+  it('keeps folder workspaces and worktrees alongside it', () => {
+    const map = buildStatusMutationWorktreeMap(
+      new Map([[worktree.id, worktree]]),
+      [folderWorkspace],
+      [tabCard]
+    )
+    expect(map.size).toBe(3)
+  })
+})

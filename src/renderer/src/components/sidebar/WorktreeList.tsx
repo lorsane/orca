@@ -185,10 +185,10 @@ const WorktreeList = React.memo(function WorktreeList({
   // Kept separate from worktreeMap, which lineage rendering reads.
   const statusMutationWorktreeMap = useMemo(
     () =>
-      folderWorkspaces.length === 0
+      folderWorkspaces.length === 0 && rowModel.pinnedTabCards.length === 0
         ? worktreeMap
-        : buildStatusMutationWorktreeMap(worktreeMap, folderWorkspaces),
-    [folderWorkspaces, worktreeMap]
+        : buildStatusMutationWorktreeMap(worktreeMap, folderWorkspaces, rowModel.pinnedTabCards),
+    [folderWorkspaces, rowModel.pinnedTabCards, worktreeMap]
   )
   const statusMutations = useWorktreeStatusMutations({
     manualOrderCatalog,

@@ -308,6 +308,7 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
     sectionRows,
     renderedSidebarRowKeys,
     allRepoIds,
+    pinnedTabCards,
     placeholderRepoIds,
     handleReorderHostSections,
     setHostDragActive
