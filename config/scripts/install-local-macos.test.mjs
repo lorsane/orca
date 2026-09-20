@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   assertReplaceableBundleName,
   findNvmNodeAtLeast,
+  isInstalledAppRunning,
   readRequiredNodeMajor
 } from './install-local-macos.mjs'
 
@@ -60,5 +61,19 @@ describe('findNvmNodeAtLeast', () => {
 
   it('ignores directory names that are not versions', () => {
     expect(findNvmNodeAtLeast(24, ['lts', 'v24.16.0'])).toBe('v24.16.0')
+  })
+})
+
+describe('isInstalledAppRunning', () => {
+  // Why this is pinned: the daemon outlives the app by design and carries the
+  // app's executable path in its own argv, so a full-command-line match
+  // reported the app as running forever and the install could never proceed.
+  it('ignores the helper processes and the daemon', () => {
+    expect(isInstalledAppRunning('Orca Multi', () => ['Orca Multi Helper'])).toBe(false)
+    expect(isInstalledAppRunning('Orca Multi', () => [])).toBe(false)
+  })
+
+  it('reports the app itself as running', () => {
+    expect(isInstalledAppRunning('Orca Multi', () => ['Orca Multi'])).toBe(true)
   })
 })

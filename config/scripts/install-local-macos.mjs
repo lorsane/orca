@@ -12,7 +12,8 @@ import { join, resolve } from 'node:path'
 
 const APPLICATIONS_DIR = '/Applications'
 const NVM_VERSIONS_DIR = join(homedir(), '.nvm', 'versions', 'node')
-const QUIT_TIMEOUT_MS = 20_000
+const QUIT_TIMEOUT_MS = 180_000
+const QUIT_NOTICE_MS = 15_000
 const QUIT_POLL_MS = 500
 
 /** The major this repo builds with, read from engines so it tracks upstream. */
@@ -63,34 +64,53 @@ function findBuiltApp(outDir) {
   return join(outDir, apps[0])
 }
 
-function readBundleName(appPath) {
-  const result = spawnSync(
-    'defaults',
-    ['read', join(appPath, 'Contents', 'Info.plist'), 'CFBundleName'],
-    { encoding: 'utf8' }
-  )
+function readInfoPlistKey(appPath, key) {
+  const result = spawnSync('defaults', ['read', join(appPath, 'Contents', 'Info.plist'), key], {
+    encoding: 'utf8'
+  })
   return result.status === 0 ? result.stdout.trim() : null
 }
 
-function isRunning(appPath) {
-  return spawnSync('pgrep', ['-f', join(appPath, 'Contents', 'MacOS')]).status === 0
+/**
+ * Whether the app itself is up — not its helpers, and not its daemon.
+ *
+ * Why an exact name and not a path match: the daemon outlives the app by design
+ * (`--login-session-watch`) and carries the app's executable path in its own
+ * argv, so matching the full command line reported the app as running forever.
+ */
+export function isInstalledAppRunning(executableName, listProcessNames) {
+  return listProcessNames().includes(executableName)
 }
 
-async function quitInstalledApp(installedPath, bundleName) {
-  if (!isRunning(installedPath)) {
+function listRunningProcessNames(executableName) {
+  const result = spawnSync('pgrep', ['-x', executableName], { encoding: 'utf8' })
+  return result.status === 0 ? [executableName] : []
+}
+
+async function quitInstalledApp(executableName, bundleName) {
+  const running = () =>
+    isInstalledAppRunning(executableName, () => listRunningProcessNames(executableName))
+  if (!running()) {
     return
   }
   console.log(`[install:local] asking ${bundleName} to quit…`)
   spawnSync('osascript', ['-e', `quit app "${bundleName}"`])
+  // Why it waits rather than failing fast: the build already happened, so giving
+  // up here throws away minutes of work over a dialog the user can still answer.
   const deadline = Date.now() + QUIT_TIMEOUT_MS
+  let nextNoticeAt = Date.now() + QUIT_NOTICE_MS
   while (Date.now() < deadline) {
-    if (!isRunning(installedPath)) {
+    if (!running()) {
       return
+    }
+    if (Date.now() >= nextNoticeAt) {
+      console.log(`[install:local] waiting for ${bundleName} to quit (⌘Q)…`)
+      nextNoticeAt = Date.now() + QUIT_NOTICE_MS
     }
     await new Promise((done) => setTimeout(done, QUIT_POLL_MS))
   }
   throw new Error(
-    `${bundleName} is still running. Quit it (⌘Q) and run this again — replacing a running app corrupts it.`
+    `${bundleName} did not quit. Quit it by hand (⌘Q) and run this again — replacing a running app corrupts it. The build is already done, so the retry is quick.`
   )
 }
 
@@ -174,18 +194,20 @@ async function main() {
   )
 
   const builtApp = findBuiltApp(outDir)
-  const bundleName = readBundleName(builtApp)
+  const bundleName = readInfoPlistKey(builtApp, 'CFBundleName')
   if (!bundleName) {
     throw new Error(`Could not read CFBundleName from ${builtApp}`)
   }
   const installedPath = join(APPLICATIONS_DIR, `${bundleName}.app`)
 
   assertReplaceableBundleName(
-    existsSync(installedPath) ? readBundleName(installedPath) : null,
+    existsSync(installedPath) ? readInfoPlistKey(installedPath, 'CFBundleName') : null,
     bundleName,
     installedPath
   )
-  await quitInstalledApp(installedPath, bundleName)
+  // The executable name, not the display name: pgrep matches what the process is called.
+  const executableName = readInfoPlistKey(builtApp, 'CFBundleExecutable') ?? bundleName
+  await quitInstalledApp(executableName, bundleName)
 
   console.log(`[install:local] installing ${bundleName} → ${installedPath}`)
   rmSync(installedPath, { recursive: true, force: true })
