@@ -5,6 +5,33 @@ workspace board and the sidebar around a monorepo workflow: most work happens in
 plain folders rather than git worktrees, one workspace holds several agents at
 once, and the list has to stay short.
 
+## Updating your install
+
+This build never updates itself, so a rebuild is the only way to pick up a
+change. One command does all of it:
+
+```sh
+cd ~/Documents/projects/orca
+pnpm install:local
+```
+
+It builds for this machine, quits the installed app, replaces it in
+`/Applications` and relaunches. No DMG is produced or mounted.
+
+If it stops with *"still running"*, the app did not quit within 20 seconds —
+quit it by hand (⌘Q) and run the command again. It deliberately refuses to
+replace a running app, and refuses any bundle whose `CFBundleName` is not the
+one it just built, so an official Orca install can never be the target.
+
+To pick up upstream's changes first, merge them before building — see
+[Tracking upstream](#tracking-upstream).
+
+macOS will ask for keychain access after a rebuild. That is expected here: the
+build is ad-hoc signed, so its designated requirement is a `cdhash`, and every
+rebuild produces a new one — the keychain sees a different app each time. A
+self-signed code-signing certificate would give it a stable identity and end the
+prompts; a Developer ID would also end the Documents/Downloads prompts.
+
 ## What differs from upstream
 
 | Area | Change |
@@ -81,12 +108,11 @@ pnpm install:local      # build for THIS machine and replace /Applications/<app>
 pnpm build:mac          # dist/orca-multi-macos-*.dmg — only to hand the build to someone else
 ```
 
-`install:local` packages the host architecture only and stops at the app bundle:
-no DMG, no zip, no blockmap. `build:mac` packages BOTH architectures and writes
-four archives, three of which a local install never opens — and the zip exists
-for an updater this fork has disabled. `install:local` quits the installed app,
-replaces it and relaunches, and refuses to touch a bundle whose `CFBundleName`
-is not the one it just built, so an official Orca install is never a target.
+`install:local` (see [Updating your install](#updating-your-install)) packages
+the host architecture only and stops at the app bundle: no DMG, no zip, no
+blockmap. `build:mac` packages BOTH architectures and writes four archives,
+three of which a local install never opens — and the zip exists for an updater
+this fork has disabled. Reach for it only when handing a build to someone else.
 
 Local macOS builds are ad-hoc signed in `afterPack`. Without that they do not
 launch on Apple Silicon: with no Developer ID, electron-builder skips signing
