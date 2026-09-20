@@ -77,8 +77,16 @@ Requires Node 24 and pnpm 12 (`corepack prepare pnpm@12.0.0 --activate`).
 
 ```sh
 pnpm install
-pnpm build:mac          # dist/orca-macos-arm64.dmg + dist/mac-arm64/Orca.app
+pnpm install:local      # build for THIS machine and replace /Applications/<app>.app
+pnpm build:mac          # dist/orca-multi-macos-*.dmg — only to hand the build to someone else
 ```
+
+`install:local` packages the host architecture only and stops at the app bundle:
+no DMG, no zip, no blockmap. `build:mac` packages BOTH architectures and writes
+four archives, three of which a local install never opens — and the zip exists
+for an updater this fork has disabled. `install:local` quits the installed app,
+replaces it and relaunches, and refuses to touch a bundle whose `CFBundleName`
+is not the one it just built, so an official Orca install is never a target.
 
 Local macOS builds are ad-hoc signed in `afterPack`. Without that they do not
 launch on Apple Silicon: with no Developer ID, electron-builder skips signing
